@@ -1,0 +1,90 @@
+---
+title: "Sociodemographic data sources"
+author: "Cantillan, R."
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+output: 
+ rmarkdown::html_document:
+     theme: flatly
+     toc: true
+     toc_depth: 2 
+     number_sections: true 
+     toc_float: true
+     toc_collapsed: true
+     highlight: monochrome
+---
+
+&nbsp;
+&nbsp;
+&nbsp;
+
+
+This document includes a table that describes the potentially usable sociodemographic variables and their extraction sources. Links for access and bibliographic references are also added.
+
+&nbsp;
+&nbsp;
+&nbsp;
+
+# Table
+&nbsp;
+&nbsp;
+&nbsp;
+
+|                                  Variables                                  |        Tipo       |      Fuente     |   Año   |
+|:---------------------------------------------------------------------------:|:-----------------:|:---------------:|:-------:|
+|                              Tamaño poblacional                             | Sociodemográficas |      IPUMS      | 1960 -  |
+|                               Urbano / rural                                |                   |      IPUMS      | 1960 -  |
+|                                     Sexo                                    |                   |      IPUMS      | 1960 -  |
+|                                Edad/Cohortes                                |                   | IPUMS CASEN CEP | 1960 -  |
+|                   Nivel educativo (promedio y desviación)                   |                   |   IPUMS CASEN   | 1920 -  |
+|                             Ocupación y estatus                             |                   |      IPUMS      | 1960 -  |
+|                               Estatus marital                               |                   |      IPUMS      | 1960 -  |
+|              Movilidad educacional (Educación padres y madres)              |                   |      CASEN      | 2011 -  |
+|               Promedio Capital Social (generador de recursos)               |                   |      CASEN      | 2017    |
+|                Prestigio ocupacional (promedio y desviación)                |                   |      CASEN      | 1990 -  |
+|                              Pertenencia étnica                             |                   | IPUMS CASEN CEP | 1960 -  |
+|                           Preferencias ideológicas                          |                   |       CEP       | 1990 -  |
+|                           Preferencias religiosas                           |                   |    IPUMS/CEP    | 1960 -  |
+|                   Afiliaciones en asociaciones voluntarias                  |                   |      CASEN      | 2000 -  |
+|              Heterogeneidad (es) (atributos sociodemográficos)              |   Esapacio Blau   |   Elaboración   |         |
+|              Distancias sociodemograficas (Homofilia promedio)              |                   |   Elaboración   |         |
+|                        Consolidación (correlaciones)                        |                   |   Elaboración   |         |
+|                   Cercanía espacial (physical propinquity)                  |  Espacio físico   |   Elaboración   |         |
+|                           Configuración espacial                            |                   |   Elaboración   |         |
+| Composición espacial (Numero focos de interacción: Barrio y organizacional) |                   |   Elaboración   |         |
+|      Vivienda (tipo, hacinamiento, déficit, acceso a servicios básicos)     |                   |  IPUMS (CENSO)  |         | 
+&nbsp;
+&nbsp;
+
+
+# Link
+
+ - https://international.ipums.org/ 
+
+ - http://observatorio.ministeriodesarrollosocial.gob.cl/encuesta-casen 
+
+ - https://www.cepchile.cl/opinion-publica/encuesta-cep/ 
+
+
+
+
+# Bibliography
+&nbsp;
+&nbsp;
+&nbsp;
+
+
+- Blau, P. M., & Schwartz, J. E. (1997). Crosscutting social circles: Testing a macrostructural theory of intergroup relations. Transaction Publishers.
+
+- Evan, W. M. (1959). Cohort Analysis of Survey Data: A Procedure for Studying Long-Term Opinion Change. Public Opinion Quarterly, 23(1), 63. https://doi.org/10.1086/266846
+
+- Perry, B. L., Pescosolido, B. A., & Borgatti, S. P. (2018). Egocentric network analysis: Foundations, methods, and models. Cambridge University Press.
+
+- Ryder, N. B. (1985). The Cohort as a Concept in the Study of Social Change. In W. M. Mason & S. E. Fienberg (Eds.), Cohort Analysis in Social Research (pp. 9–44). Springer New York. https://doi.org/10.1007/978-1-4613-8536-3_2
+
+- Small, M. L., & Adler, L. (2019). The Role of Space in the Formation of Social Ties. Annual Review of Sociology, 45(1), 111–132. https://doi.org/10.1146/annurev-soc-073018-022707
+
+
+
+
+
+
