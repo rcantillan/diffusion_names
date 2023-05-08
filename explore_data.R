@@ -8,7 +8,7 @@ library(stringi)
 library(stringdist)
 
 # setwd
-setwd("")
+setwd("/home/rober/Documents/proyecto_nombres/wetransfer_ak002t0025787_2023-04-18_1401/AK002T0025787/Anexo_Respuesta_AK002T0025787")
 Sys.setlocale( 'LC_ALL','C' ) 
 names<-read_delim("datos_1920a2021.txt", delim = ";", locale=locale(encoding="latin1")) 
 
@@ -17,39 +17,14 @@ colnames(names)<-c("ano","comuna","nombre","cantidad")
 names<-separate(names, ano, into = c("ano","mes"), sep = c(4))
 
 # sample subset (stratified by "ano", "comuna")
-names_sample <- names %>% group_by(ano,comuna) %>% sample_frac(size=.1)
+names_sample <- names %>% group_by(ano,comuna) %>% sample_frac(size=.01)
 
 # remove tilde and encoding (comuna)
 names_sample$comuna = stri_trans_general(str = names_sample$comuna, id = "Latin-ASCII")
 
-# find ambiguous names 
-#names_sample$bins <- sapply(names_sample$comuna, function(n)
-#  paste(as.integer(agrepl(n, names_sample$comuna, max.distance = 2)), collapse=""))
-#names_sample$group <- as.integer(as.factor(names_sample$bins))
-
 # find similar string (similar groups = smg)
 ## option 1
-smg <- function(x, thresh = 0.9){
-  grp <- integer(length(x))
-  comuna <- x
-  for(i in seq_along(comuna)){
-    if(!is.na(comuna[i])){
-      sim <- agrepl(x[i], x, ignore.case = TRUE, max.distance = 1 - thresh)
-      k <- which(sim & !is.na(comuna))
-      grp[k] <- i
-      is.na(comuna) <- k
-    }
-  }
-  grp
-}
-
-#smg(names_sample[['comuna']])
-sp1<-names_sample %>%
-  mutate(group = comuna[smg(comuna)]) 
-#%>%count(group)
-
-## option 2
-smg2 <- function(x, thresh = 0.8, method = "soundex"){
+similar_groups_str <- function(x, thresh = 0.8, method = "soundex"){
   grp <- integer(length(x))
   comuna <- x
   x <- tolower(x)
@@ -63,19 +38,7 @@ smg2 <- function(x, thresh = 0.8, method = "soundex"){
   }
   grp
 }
-
-sp2<-names_sample %>%
-  mutate(group = comuna[smg2(comuna, thresh = 0.3, method = "jw")])
-#%>% count(group)
-table(sp1$comuna)
-
-
-
-
-
-
-
-
-
+comunas_x<-names_sample %>%
+  mutate(group = comuna[similar_groups_str(comuna, thresh = 0.7, method = "jw")]) %>% count(group)
 
 
