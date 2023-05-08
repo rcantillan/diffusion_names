@@ -29,37 +29,49 @@ id_comunas_1960 <- read_delim("~/Documents/diffusion_names/data/id_comunas_1960"
                               delim = "\t", escape_double = FALSE, 
                               trim_ws = TRUE)
 colnames(id_comunas_1960)<-c("id","name")
+id_comunas_1960$year<-1960
 
 ## 1970
 id_comunas_1970 <- read_delim("~/Documents/diffusion_names/data/id_comunas_1970", 
                               delim = "\t", escape_double = FALSE, 
                               trim_ws = TRUE)
 colnames(id_comunas_1970)<-c("id","name")
+id_comunas_1970$year<-1970
 
 ## 1982
 id_comunas_1982 <- read_delim("~/Documents/diffusion_names/data/id_comunas_1982", 
                               delim = "\t", escape_double = FALSE, 
                               trim_ws = TRUE)
 colnames(id_comunas_1982)<-c("id","name")
+id_comunas_1982$year<-1982
 
 ## 1992
 id_comunas_1992 <- read_delim("~/Documents/diffusion_names/data/id_comunas_1992", 
                               delim = "\t", escape_double = FALSE, 
                               trim_ws = TRUE)
 colnames(id_comunas_1992)<-c("id","name")
+id_comunas_1992$year<-1992
 
 ## 2002
 id_comunas_2002 <- read_delim("~/Documents/diffusion_names/data/id_comunas_2002", 
                               delim = "\t", escape_double = FALSE, 
                               trim_ws = TRUE)
 colnames(id_comunas_2002)<-c("id","name")
+id_comunas_2002$year<-2002
 
 ## 2017
 id_comunas_2017 <- read_delim("~/Documents/diffusion_names/data/id_comunas_2017", 
                               delim = "\t", escape_double = FALSE, 
                               trim_ws = TRUE)
 colnames(id_comunas_2017)<-c("id","name")
+id_comunas_2017$year<-2017
 
+## join
+id_comunas_ipums<-rbind(id_comunas_1960, id_comunas_1970, id_comunas_1982, id_comunas_1992,
+                         id_comunas_2002, id_comunas_2017)
+
+# uppercase name
+id_comunas_ipums$name <- toupper(id_comunas_ipums$name)
 
 
 
