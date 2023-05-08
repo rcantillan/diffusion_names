@@ -8,7 +8,7 @@ library(stringi)
 library(stringdist)
 
 # setwd
-setwd("/home/rober/Documents/proyecto_nombres/wetransfer_ak002t0025787_2023-04-18_1401/AK002T0025787/Anexo_Respuesta_AK002T0025787")
+setwd("")
 Sys.setlocale( 'LC_ALL','C' ) 
 names<-read_delim("datos_1920a2021.txt", delim = ";", locale=locale(encoding="latin1")) 
 
