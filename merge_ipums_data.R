@@ -80,6 +80,8 @@ id_comunas_ipums<-id_comunas_ipums %>%
 id_comunas_ipums$name<-stri_trans_general(id_comunas_ipums$name,id = "Latin-ASCII")
 id_comunas_ipums$name <- toupper(id_comunas_ipums$name)
 
+# save
+save(id_comunas_ipums, file = "id_comunas_ipums.RData")
 
 
 
