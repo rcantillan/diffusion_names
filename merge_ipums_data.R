@@ -6,6 +6,7 @@ library(tidyr)
 library(dplyr)
 library(purrr)
 library(stringi)
+library(stringr)
 library(stringdist)
 library(questionr)
 
@@ -70,7 +71,13 @@ id_comunas_2017$year<-2017
 id_comunas_ipums<-rbind(id_comunas_1960, id_comunas_1970, id_comunas_1982, id_comunas_1992,
                          id_comunas_2002, id_comunas_2017)
 
-# uppercase name
+# separate column character by coma. 
+id_comunas_ipums<-id_comunas_ipums %>%            
+  separate_rows(name, sep=",") %>% 
+  mutate(across(where(is.character), str_trim))
+
+# delete accent and `toupper`
+id_comunas_ipums$name<-stri_trans_general(id_comunas_ipums$name,id = "Latin-ASCII")
 id_comunas_ipums$name <- toupper(id_comunas_ipums$name)
 
 
