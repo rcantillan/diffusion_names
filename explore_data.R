@@ -4,8 +4,14 @@ library(readr)
 library(tidyr)
 library(dplyr)
 library(purrr)
+library(igraph)
+library(migraph)
 library(stringi)
+library(ggraph)
+library(ggforce)
+library(graphlayouts)
 library(stringdist)
+library(bipartite)
 
 # setwd
 setwd("")
@@ -15,12 +21,11 @@ names<-read_delim("datos_1920a2021.txt", delim = ";", locale=locale(encoding="la
 # separate year/month column 
 colnames(names)<-c("ano","comuna","nombre","cantidad")
 names<-separate(names, ano, into = c("ano","mes"), sep = c(4))
+names$comuna = stri_trans_general(str = names$comuna, id = "Latin-ASCII")
+names$nombre = stri_trans_general(str = names$nombre, id = "Latin-ASCII")
 
 # sample subset (stratified by "ano", "comuna")
-names_sample <- names %>% group_by(ano,comuna) %>% sample_frac(size=.01)
-
-# remove tilde and encoding (comuna)
-names_sample$comuna = stri_trans_general(str = names_sample$comuna, id = "Latin-ASCII")
+names_sample <- names %>% group_by(ano,comuna) %>% sample_frac(size=.1)
 
 # find similar string (similar groups = smg)
 ## option 1
@@ -40,5 +45,120 @@ similar_groups_str <- function(x, thresh = 0.8, method = "soundex"){
 }
 comunas_x<-names_sample %>%
   mutate(group = comuna[similar_groups_str(comuna, thresh = 0.7, method = "jw")]) %>% count(group)
+
+
+# create weighted network 
+## group by year
+names_sample_1920 <- names_sample %>% uncount(cantidad) %>% filter(ano==1920) %>%
+  ungroup() %>% select(nombre, comuna) %>%as.data.frame()
+
+## to weighted edgelist 
+colnames(names_sample_1920)<-c("from", "to")
+edgelist_bi <- migraph::as_edgelist(names_sample_1920) %>% count(from, to, sort = FALSE)
+
+# alternative 
+## reshape
+adj <- reshape(edgelist_bi, v.names = "n", idvar = "from", timevar = "to", direction = "wide")
+adj[is.na(adj)] <- 0
+adj[,order(colnames(adj))]
+adj <- adj %>% remove_rownames %>% column_to_rownames(var="from")
+
+## remove part of column names
+for ( col in 1:ncol(adj)){
+  colnames(adj)[col] <-  sub("n.", "", colnames(adj)[col])
+}
+
+?as.one.mode
+## to one mode matrix 
+p<-as.one.mode(adj, project="higher") #project="lower
+
+
+# projection (con  bipartite package)
+# If two communes A and B interact with names 1 to 5, then the two interaction vectors for A with 1 to 5 and B with 1 to 5 are placed next to each other, 
+# and for each name 1 to 5, it holds the minimum for each of these 5 values for the two vectors (the parallel minimum). 
+# The idea is that the similarity between communes A and B is due to their lower commonality in the interactions. 
+# The five parallel minimum values are then added to obtain the final weight for this link.
+
+# plot (preparativos)
+g<- graph.adjacency(p, mode="undirected", weighted=TRUE)
+E(g)$width <- E(g)$weight + min(E(g)$weight) + 1 # offset=1
+g <- igraph::delete.vertices(g, c("AISEN","COLBUN","CHILE CHICO")) #degree0
+
+
+#plot(g)
+#V(g)$cluster_louvain
+bb <- layout_as_backbone(g, keep = 0.4)
+
+# plot II
+x <- c(4.9207, 4.567, 4.8594, 5.1162, 4.5081, 5.1636, 4.6001, 4.6621, 4.9537, 5.02, 4.8979, 5.4752, 4.4177,
+    5.1984, 4.8288, 5.1637, 4.5433, 4.3625, 4.6914, 4.8832, 4.8479, 5.1393, 5.1412, 4.3907, 4.7751, 4.6514,
+    5.3138, 4.2322, 4.1169, 4.7969, 5.0072, 4.7467, 4.0569, 4.4155, 5.7233, 5.5578, 5.1991, 4.9291, 4.179,
+    5.1042, 4.7119, 4.883, 5.0125, 5.6572, 5.1637, 5.8292, 4.8743, 5.1838, 5.0675, 4.3339, 4.9365, 4.3991,
+    4.0809, 5.0724, 4.2483, 4.1975, 4.9208, 4.3228, 5.8682, 4.4232, 4.5537, 4.8127, 5.0337, 5.4458, 4.9958,
+    4.0032, 4.7244, 4.3471, 5.324, 4.7546, 4.0893, 4.2439, 4.7035, 3.8054, 5.7488, 4.1971, 5.6574, 5.0015,
+    5.022, 4.3615, 4.9533, 4.3941, 5.1397, 4.0617, 4.2312, 4.8481, 4.8159, 4.287, 4.4604, 4.7312, 4.9013,
+    5.126, 4.5534, 3.9613, 4.3094, 3.94, 4.8075, 5.8012, 5.7017, 5.3566, 4.5419, 5.3414, 4.6833, 4.3684,
+    4.0423, 4.6109, 3.8055, 5.0286, 4.5323, 4.8532, 5.1608, 4.089, 4.6657, 4.9701, 4.5391, 4.9269, 4.6059,
+    5.0863, 5.0936, 5.3698, 6.149, 4.5038, 4.5646, 4.7583, 4.1544, 4.3314, 5.1461, 4.548, 3.8564, 5.3539,
+    5.2658, 4.6003, 3.75, 5.4546, 4.8674, 4.9735, 4.823, 5.4604, 4.3446, 4.641, 5.3816, 4.2953, 3.8746,
+    5.6813, 4.0895, 4.8291, 4.217, 4.5297, 5.5392, 3.9153, 4.2605, 4.4958, 5.5743, 4.1857, 5.0967, 4.1715,
+    5.3915, 5.3607, 4.724, 3.9123, 4.8155, 4.4173, 4.4593, 4.1182, 3.9325, 5.0972, 4.1925, 4.6552, 5.5083,
+    4.2664, 4.6321, 5.1325, 4.9828, 4.3195, 4.7493, 5.1316, 5.5917, 5.2022, 5.0439, 4.7908, 4.3708, 3.925,
+    4.8617, 4.136, 5.3389, 4.6693, 4.6817, 4.8345, 4.3863, 4.3976, 4.5666, 3.8835, 3.8748, 4.0971, 5.2797,
+    4.6282, 3.9584, 5.0451, 5.49, 4.3812, 5.5767, 5.6572, 4.3723, 5.1355, 4.4702, 5.4157, 3.8507, 5.7764,
+    4.6034, 5.8729, 4.6974, 3.9643, 3.8775, 4.3954, 5.7655, 5.004, 5.0635, 5.6424, 4.49, 5.3434, 4.9367,
+    4.0066, 4.2611, 4.304, 3.7793, 5.0963, 5.3464, 5.5555, 4.4554, 4.5553, 4.8302, 4.4896, 4.5485, 4.3545,
+    4.2524, 4.0673, 4.6846, 5.4333, 4.7668, 4.1241, 5.6056, 4.8459, 4.7236, 4.0083, 3.739, 3.9867, 3.8295,
+    4.1182, 5.1413, 4.243, 4.9282, 3.928, 5.4655, 5.8679, 4.0474, 5.0301, 4.1631, 3.744, 5.0854, 5.166,
+    5.0274, 3.9005, 4.1636, 4.2859, 4.9287, 5.5149, 5.9233, 6.273, 5.5632, 5.4814, 5.8141, 4.0695, 4.2588,
+    3.9633, 4.9917, 3.9687, 5.8742, 6.3614, 5.686, 4.1859, 5.8298, 4.6952, 4.1429, 5.8218, 6.164, 3.7803,
+    5.5253, 5.0852, 6.0254, 6.1933, 3.9811, 3.8849, 3.9295, 3, 6.5592)
+y <- c(2.1807, 2.0359, 1.2365, 1.3177, 1.2861, 1.9343, 1.2728, 1.6521, 1.0942, 0.7228, 2.3897, 0.925,
+    1.2703, 1.9605, 1.2012, 2.1955, 2.1001, 2.3589, 1.2038, 1.5238, 1.6996, 1.8058, 1.5844, 1.9449, 0.797,
+    0.9628, 1.6172, 1.7967, 1.1078, 0.9531, 1.6208, 1.5395, 1.8176, 1.3892, 1.548, 1.978, 1.3931, 1.5674,
+    0.7438, 1.6129, 1.3683, 1.4526, 1.4185, 1.4008, 1.7233, 1.6801, 0.9241, 1.4682, 1.4737, 1.125, 1.7824,
+    2.4926, 1.8783, 1.696, 1.0931, 1.685, 0.8674, 1.2681, 2.0035, 1.5454, 0.9172, 1.8156, 0.9944, 2.0614,
+    2.3573, 1.3644, 1.5659, 2.3199, 1.9368, 1.3637, 1.7492, 1.976, 2.2576, 1.7254, 2.0194, 1.6374, 0.3754,
+    1.5358, 1.803, 0.6789, 1.2752, 1.453, 2.3268, 2.0012, 2.434, 1.9694, 2.1418, 1.8768, 2.5178, 2.5801,
+    2.2225, 1.402, 1.7081, 1.5087, 2.0791, 1.8852, 2.3899, 0.9834, 1.7529, 1.3098, 1.3688, 2.4158, 1.6871,
+    2.2648, 1.6691, 1.3695, 1.6125, 1.9474, 1.6442, 1.7517, 2.0581, 1.6203, 2.4349, 2.3388, 2.3298, 1.1953,
+    1.1735, 2.357, 1.0931, 1.5028, 0.6611, 2.0767, 0.3138, 2.3114, 2.1179, 1.3378, 1.2385, 1.5024, 1.0239,
+    1.1431, 1.5832, 1.4683, 1.6852, 2.1962, 2.5035, 1.6752, 1.5804, 1.5188, 0.8444, 2.6082, 1.8518, 0.8788,
+    1.6464, 1.9015, 1.9224, 1.8976, 1.4155, 0.8126, 1.0394, 0.7613, 1.3152, 1.9854, 2.8899, 2.0053, 2.1402,
+    1.8395, 2.2466, 2.7655, 1.7966, 1.1913, 2.1936, 1.6801, 1.0056, 1.4977, 1.8083, 2.9518, 2.2612, 2.0379,
+    1.8388, 1.0234, 1.816, 1.1539, 2.1048, 1.5913, 2.0058, 1.3528, 1.714, 2.1031, 1.2447, 1.1939, 2.1195,
+    1.4757, 0.4548, 2.5676, 1.0895, 1.0082, 2.1953, 2.5302, 2.7081, 1.0097, 1.8861, 2.2704, 1.8793, 1.3398,
+    1.1987, 1.9126, 1.5926, 2.0345, 1.2333, 0.7901, 1.5716, 1.0423, 1.805, 1.8756, 1.8498, 0.8482, 0.8795,
+    1.3659, 2.3804, 1.2102, 2.5272, 1.9587, 1.7584, 2.0342, 2.2542, 1.214, 1.0608, 1.6165, 2.6026, 0.3522,
+    0.9437, 2.2018, 1.4654, 2.6319, 1.867, 2.0805, 1.7416, 1.9475, 0.733, 1.0727, 1.0198, 2.2231, 2.4968,
+    1.7811, 0.9219, 0.9201, 0.592, 0.687, 2.4611, 0.9682, 1.8527, 1.0579, 0.9536, 1.1454, 1.1234, 2.3486,
+    2.2746, 2.0621, 2.2186, 2.0525, 2.2757, 1.4327, 1.6665, 1.3394, 1.4459, 0.9205, 1.5773, 1.0255, 2.2571,
+    0.4095, 2.4262, 1.5508, 1.3168, 2.5201, 2.5234, 1.4363, 2.3876, 1.6531, 2.0769, 2.7296, 2.6847, 2.4297,
+    0.731, 1.7129, 0, 0.7415, 2.3574, 2.5723, 2.4024, 2.6592, 0.7296, 0.7915, 1.4154, 0.4698, 0.7375,
+    0.8717, 2.4609, 0.2474, 1.3572, 2.1693, 2.6491, 2.5686, 2.501, 2.4442, 1.7882)
+
+ggraph(g, layout = "manual", x = x, y = y) + 
+	 geom_edge_link0(aes(width = weight), edge_colour = "#A8A8A8",
+    edge_alpha = 1) + 
+	 scale_edge_width(range = c(0.05, 2)) + 
+	 geom_node_point(aes(fill = cluster_louvain,
+    size = eigen_centrality), colour = "#FFFFFF", shape = 21, stroke = 0.5) + 
+  geom_node_text(aes(filter = degree >= 50
+                     , label = name, size=0.005), family = "Helvetica-Narrow", repel = F) +
+	 scale_fill_brewer(palette = "Dark2",
+    na.value = "gray53") + 
+	 scale_size(range = c(2, 9)) + 
+	 #geom_node_text(aes(label = name), colour = "#000000",size = 3, family = "Helvetica-Narrow") + 
+	 theme_graph() + 
+	 theme(legend.position = "none")
+
+
+
+
+
+
+
+
+
 
 

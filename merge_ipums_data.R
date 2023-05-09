@@ -87,4 +87,3 @@ save(id_comunas_ipums, file = "id_comunas_ipums.RData")
 
 
 
-
