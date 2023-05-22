@@ -67,7 +67,7 @@ g %>%
                  alpha = 0.8, strength = 0.2, show.legend = FALSE) +
   scale_edge_width_continuous(range = c(0.1,2)) +
   scale_edge_colour_identity() +
-  geom_node_point(aes(x=x, y=y, size = NULL, fill = "darkblue"), colour = "white", 
+  geom_node_point(aes(x=x, y=y, size = 3, fill = "darkblue"), colour = "white", 
                   pch = 21, alpha = 0.7, show.legend = FALSE) +
   scale_size_continuous(range = c(1,8)) +
   scale_fill_identity() +
