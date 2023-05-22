@@ -200,5 +200,5 @@ gse_comunas_1970 %>% pivot_longer(cols=c('prom_isei', 'prom_school'),
   labs(title= "SEG distribution 1970", x="") 
 
 
-
+rm(names_sample)
 
