@@ -48,17 +48,34 @@ p <- bipartite::as.one.mode(am, project="lower") #project="higher"
 # project with backbone package
 bb <- disparity(p, alpha = 0.05, narrative = TRUE)
 
-plot(bb)
+# tidygraph object
 g1 <- igraph::graph_from_data_frame(bb) %>% as_tbl_graph()
-
 
 # plot (preparativos)
 g<- graph.adjacency(bb, mode="undirected", weighted=TRUE)
-E(g)$width <- E(g)$weight + min(E(g)$weight) + 1 # offset=1
+#E(g)$width <- E(g)$weight + min(E(g)$weight) + 1 # offset=1
 #g <- igraph::delete.vertices(g, c("AISEN","COLBUN","CHILE CHICO")) #degree0
+g<-as_tbl_graph(g)
+#g
 
-
-g
+# plot I
+g %>%
+  activate(nodes) %>% 
+  filter(!node_is_isolated()) %>%
+  ggraph("graphopt") +
+  geom_edge_arc0(aes(color = "red", width = weight), 
+                 alpha = 0.8, strength = 0.2, show.legend = FALSE) +
+  scale_edge_width_continuous(range = c(0.1,2)) +
+  scale_edge_colour_identity() +
+  geom_node_point(aes(x=x, y=y, size = betweenness, fill = "darkblue"), colour = "white", 
+                  pch = 21, alpha = 0.7, show.legend = FALSE) +
+  scale_size_continuous(range = c(1,8)) +
+  scale_fill_identity() +
+  ggnewscale::new_scale("size") + 
+  geom_node_text(aes(label = name, filter = degree >= 15), colour = "#000000", 
+                 size = 3, family = "calibri", repel = T) + 
+  scale_size_continuous(range = c(0.5,5)) +
+  theme_void()
 
 
 
