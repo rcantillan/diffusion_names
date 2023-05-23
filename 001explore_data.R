@@ -57,7 +57,6 @@ names_sample_1970_79<-names_sample_1970_79 %>% dplyr::mutate(comuna=recode(comun
 
 # merge con atributos de 
 names_sample_1970_79<-names_sample_1970_79%>%group_by(nombre, comuna) %>% count()
-names_sample_1970_79<-left_join(names_sample_1970_79, gse_comunas_1970, by="comuna")
   
 
 

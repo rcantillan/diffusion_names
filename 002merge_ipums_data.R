@@ -201,4 +201,6 @@ gse_comunas_1970 %>% pivot_longer(cols=c('prom_isei', 'prom_school'),
 
 
 rm(names_sample)
+# unir con datos de nombres. 
+names_sample_1970_79<-left_join(names_sample_1970_79, gse_comunas_1970, by="comuna")
 

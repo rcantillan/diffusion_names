@@ -8,18 +8,21 @@ library(questionr)
 library(bipartite)
 library(backbone)
 library(tidygraph)
+library(netdiffuseR)
 
 
 # unir datos 
-a<-left_join(names_sample_1970_79,gse_comunas_1970, by="comuna")
+#a<-left_join(names_sample_1970_79,gse_comunas_1970, by="comuna")
 
 
 # atributos nombres. 
 ## Weighted mean by group
-nombres_attr <- a %>%                                          
+nombres_attr <- names_sample_1970_79 %>%                                          
   group_by(nombre) %>% 
   summarise(weighted.mean(prom_isei, n, na.rm = TRUE),
             weighted.mean(prom_school, n, na.rm = TRUE)) 
+
+colnames(nombres_attr)<-c("nombres", "prom_isei", "prom_school")
 
 
 ## to weighted edgelist 
@@ -46,28 +49,43 @@ p <- bipartite::as.one.mode(am, project="lower") #project="higher"
 # The five parallel minimum values are then added to obtain the final weight for this link.
 
 # project with backbone package
-bb <- disparity(p, alpha = 0.05, narrative = TRUE)
+bb <- disparity(p, alpha = 0.01, narrative = TRUE)
+
+# to edgelist
+rmbb<-row.names(bb)
+bb_tibble<-as_tibble(bb)
+bb_tibble$from<-rmbb
+bb_tibble<-bb_tibble %>% relocate(from)
+bb_tibble <- bb_tibble %>% pivot_longer(!from, names_to = "to", values_to = "value") %>% filter(value==1)
+
 
 # tidygraph object
-g1 <- igraph::graph_from_data_frame(bb) %>% as_tbl_graph()
+g1 <- igraph::graph_from_data_frame(bb_tibble, vertices = nombres_attr) %>% as_tbl_graph()
 
-# plot (preparativos)
-g<- graph.adjacency(bb, mode="undirected", weighted=TRUE)
-#E(g)$width <- E(g)$weight + min(E(g)$weight) + 1 # offset=1
-#g <- igraph::delete.vertices(g, c("AISEN","COLBUN","CHILE CHICO")) #degree0
-g<-as_tbl_graph(g)
-#g
+# descriptivos red. 
+g1<- g1 %>% 
+  activate(nodes) %>% 
+  filter(!node_is_isolated()) %>%
+  mutate(degree = centrality_degree()) %>% 
+  mutate(pagerank = centrality_pagerank()) %>%
+  mutate(closeness = centrality_closeness()) %>% 
+  mutate(betweenness = centrality_betweenness()) %>%
+  filter(degree>1) %>%
+  mutate(tri = local_triangles()) %>%  
+  mutate(localclust = 2*tri/(degree*(degree-1)))%>%
+  mutate(comp = group_components())
+#g1
 
 # plot I
-g %>%
+g1 %>%
   activate(nodes) %>% 
   filter(!node_is_isolated()) %>%
   ggraph("graphopt") +
-  geom_edge_arc0(aes(color = "red", width = weight), 
+  geom_edge_arc0(aes(color = "red", width = value), 
                  alpha = 0.8, strength = 0.2, show.legend = FALSE) +
-  scale_edge_width_continuous(range = c(0.1,2)) +
+  #scale_edge_width_continuous(range = c(0.1,2)) +
   scale_edge_colour_identity() +
-  geom_node_point(aes(x=x, y=y, size = 3, fill = "darkblue"), colour = "white", 
+  geom_node_point(aes(filter = degree >= 100, x=x, y=y, size = degree, fill = "darkblue"), colour = "white", 
                   pch = 21, alpha = 0.7, show.legend = FALSE) +
   scale_size_continuous(range = c(1,8)) +
   scale_fill_identity() +
