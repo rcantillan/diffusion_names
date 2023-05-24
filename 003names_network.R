@@ -9,7 +9,9 @@ library(bipartite)
 library(backbone)
 library(tidygraph)
 library(netdiffuseR)
-
+library(linkcomm)
+library(Clustering)
+library(networkflow)
 
 # unir datos 
 #a<-left_join(names_sample_1970_79,gse_comunas_1970, by="comuna")
@@ -70,22 +72,45 @@ g1<- g1 %>%
   mutate(pagerank = centrality_pagerank()) %>%
   mutate(closeness = centrality_closeness()) %>% 
   mutate(betweenness = centrality_betweenness()) %>%
+  mutate(cluster=group_infomap())%>%
   filter(degree>1) %>%
   mutate(tri = local_triangles()) %>%  
   mutate(localclust = 2*tri/(degree*(degree-1)))%>%
   mutate(comp = group_components())
 #g1
 
+# degree distribution
+deg<-g1%>%activate(nodes)%>%select(degree,pagerank)%>%as_tibble()
+#deg%>%ggplot(aes(x = pagerank))+geom_density()
+
+min_max_norm <- function(x) {
+  (x - min(x)) / (max(x) - min(x))
+}
+
+deg$degree<-min_max_norm(deg$degree)
+deg$pagerank<-min_max_norm(deg$pagerank)
+
+
+deg %>% pivot_longer(cols=c('degree', 'pagerank'),
+                      names_to='Centralities',
+                      values_to='value') %>% 
+  ggplot(aes(x=value, fill = Centralities, colour = Centralities)) + 
+  geom_density(alpha = 0.1) +
+  labs(title= "Centrality distribution", x="") 
+
+
+
+
 # plot I
 g1 %>%
   activate(nodes) %>% 
-  filter(!node_is_isolated()) %>%
+  filter(degree=>400) %>%
   ggraph("graphopt") +
   geom_edge_arc0(aes(color = "red", width = value), 
                  alpha = 0.8, strength = 0.2, show.legend = FALSE) +
   #scale_edge_width_continuous(range = c(0.1,2)) +
   scale_edge_colour_identity() +
-  geom_node_point(aes(filter = degree >= 100, x=x, y=y, size = degree, fill = "darkblue"), colour = "white", 
+  geom_node_point(aes(x=x, y=y, size = degree, fill = "darkblue"), colour = "white", 
                   pch = 21, alpha = 0.7, show.legend = FALSE) +
   scale_size_continuous(range = c(1,8)) +
   scale_fill_identity() +
@@ -97,24 +122,11 @@ g1 %>%
 
 
 
-#plot(g)
-#V(g)$cluster_louvain
-bb <- layout_as_backbone(g, keep = 0.4)
+# cluster
+bb_tibble<-bb_tibble%>%select(from,to)
+bb_tible<-as.data.frame(bb_tibble)
 
-ggraph(g, layout = "manual", x = x, y = y) + 
-  geom_edge_link0(aes(width = weight), edge_colour = "#A8A8A8",
-                  edge_alpha = 1) + 
-  scale_edge_width(range = c(0.05, 2)) + 
-  geom_node_point(aes(fill = cluster_louvain,
-                      size = eigen_centrality), colour = "#FFFFFF", shape = 21, stroke = 0.5) + 
-  geom_node_text(aes(filter = degree >= 50
-                     , label = name, size=0.005), family = "Helvetica-Narrow", repel = F) +
-  scale_fill_brewer(palette = "Dark2",
-                    na.value = "gray53") + 
-  scale_size(range = c(2, 9)) + 
-  #geom_node_text(aes(label = name), colour = "#000000",size = 3, family = "Helvetica-Narrow") + 
-  theme_graph() + 
-  theme(legend.position = "none")
-
+lc<-getLinkCommunities(bb_tibble, hcmethod = "average")
+oc <- getOCG.clusters(bb_tibble)
 
 
