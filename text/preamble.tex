@@ -1,0 +1,44 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{blindtext}
+\usepackage{graphicx}
+\usepackage{authblk}
+%\usepackage{natbib}
+\usepackage{xcolor}
+\usepackage{float}
+\usepackage{amsmath}
+\usepackage[english]{babel}
+\usepackage{graphicx} % Required for inserting images
+\usepackage[paperheight=16cm,paperwidth=12cm,textwidth=8cm]{geometry}
+\usepackage[flushleft]{threeparttable,booktabs}
+\usepackage{booktabs}
+\usepackage{etoolbox}
+\appto\TPTnoteSettings{\footnotesize}
+
+\usepackage[
+        backend=biber,
+        style=authoryear-comp,
+        sorting=nyt,
+        style=apa
+    ]{biblatex}
+ \addbibresource{references.bib}
+
+
+ \geometry{
+ a4paper,
+ total={170mm,257mm},
+ left=30mm,
+ right=30mm,
+ top=30mm,
+ bottom=30mm
+ }
+
+% Keywords command
+\providecommand{\keywords}[1]
+{
+  \small	
+  \textbf{\textit{Keywords---}} #1
+}
+
+\graphicspath{{output/}}
+
