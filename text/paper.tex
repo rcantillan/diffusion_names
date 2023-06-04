@@ -16,30 +16,49 @@
 
 \section{Methodology}
 
-We can represent the patterns by which workers change their occupations as a weighted network. In this network, each occupation is represented by a node, and each directed edge between two nodes represents the number of workers who moved from one occupation to the other. The weight of an edge can be asymmetric, meaning that the number of workers moving from one occupation to another may not be equal to the number of workers moving in the opposite direction.
+Podemos representar ejemplos de cómo los trabajadores cambian de trabajo como redes complejas. En esta red, cada tarea está representada por un nodo y cada ruta entre dos nodos representa la cantidad de trabajadores que se movieron de una tarea a otra. Los pesos de los bordes pueden no ser iguales, lo que significa que la cantidad de trabajadores que se mueven de un trabajo a otro puede no ser igual a la cantidad de trabajadores que se mueven en la dirección opuesta.
 
-The adjacency matrix of this network is simply the standard occupational mobility table. This is because each entry in the adjacency matrix, w 
-ij
-​
- , represents the number of workers who moved from occupation i to occupation j. Therefore, conceptualizing the mobility table as a weighted network is simply a different way of representing the same information.
+La matriz adyacente a esta red es una función normal de la tabla de enrutamiento. Esto se debe a que cada entrada en la matriz de adyacencia, \(w_ij \)  , representa la cantidad de trabajadores que pasaron del trabajo \( i\) al trabajo \( j \). Entonces, pensar en una tabla de enrutamiento como una red ponderada es solo otra forma de presentar la misma información.
 
-Here is an example of how this might work. Suppose that we have a population of workers, and we want to track how they change occupations over time. We could start by creating a network with one node for each occupation. We could then assign a weight to each edge in the network, representing the number of workers who moved from one occupation to another. For example, if 100 workers moved from occupation A to occupation B, we would assign a weight of 100 to the edge connecting nodes A and B.
+Aquí hay un ejemplo de cómo podría funcionar esto. Digamos que tenemos un grupo de empleados y queremos hacer un seguimiento de cómo cambian sus trabajos con el tiempo. Podemos comenzar creando una red con un nodo para cada evento. Entonces podemos dar a cada lado de la red un peso que represente el número de trabajadores que se trasladaron de un trabajo a otro. Por ejemplo, si 100 trabajadores pasan del trabajo A al B, asignaríamos el peso a los 100 nodos que conectan los nodos A y B.
 
-We could then track how the network changes over time by updating the weights of the edges. For example, if 50 workers moved from occupation B to occupation C, we would update the weight of the edge connecting nodes B and C to 50.
+Podemos determinar cómo cambia la red con el tiempo actualizando los valores de umbral. Por ejemplo, si 50 trabajadores pasan del trabajo B al C, actualizaremos los pesos de borde que conectan los nodos B y C a 50.
 
-By tracking the changes in the network over time, we can get a better understanding of how workers move between occupations. This information can be used to inform policies that aim to improve labor market outcomes.
+Al observar los cambios en la red a lo largo del tiempo, podemos comprender mejor cómo los trabajadores se mueven entre trabajos. Esta información se puede utilizar para informar políticas para mejorar los resultados del mercado laboral. La idea de ver una tabla de flujo como una red tiene varios puntos importantes. Primero, nos permite considerar el flujo de información, influencia y otros recursos a través de la red. Esto se debe a que Internet no es solo una estructura fija; Estos son los sistemas dinámicos a través de los cuales fluyen los recursos.
 
-The idea of conceptualizing the mobility table as a network has several important implications. First, it allows us to think about the flow of information, influence, and other resources through the network. This is because networks are not just static structures; they are dynamic systems through which resources flow.
+En segundo lugar, pensar en la tabla de enrutamiento como una red nos permite ir más allá de las conexiones directas y considerar múltiples formas de conexión entre nodos. La razón es que el flujo de recursos a través de la red puede ser indirecto, ya que los recursos pueden fluir de un nodo a otro a través de un nodo intermedio. Tercero, pensar en la tabla de flujo como una red nos permite incluir información sobre la estructura de toda la red en nuestro análisis. Esto se debe a que la interfaz de red puede afectar el flujo de recursos a través de la red.
 
-Second, conceptualizing the mobility table as a network allows us to go beyond direct connections to consider multistep linkages between nodes. This is because the flow of resources through a network can be indirect, as resources can flow from one node to another through intermediate nodes.
+Aquí hay algunos ejemplos de cómo usar el concepto de una tabla de viaje como una red para responder preguntas de investigación:
 
-Third, conceptualizing the mobility table as a network allows us to incorporate information regarding the structure of the entire network into our analysis. This is because the structure of a network can affect the flow of resources through the network.
+Podemos utilizar el concepto de difusión para estudiar cómo se difunde la información sobre nuevos puestos de trabajo en la red. Por ejemplo, podemos ver cómo un nuevo proceso de referencia se extiende a las redes de amigos y colegas[1].
 
-Here are some examples of how conceptualizing the mobility table as a network can be used to answer research questions.
+Podemos usar el concepto de flujo para estudiar cómo se mueve la influencia a través de una red. Por ejemplo, podemos determinar qué tan rápido se propaga el apoyo a una nueva política a través de una red de activistas políticos[2].
 
-We can use the concept of flow to study how information about new jobs spreads through a network. For example, we could track how quickly information about a new job opening spreads through a network of friends and colleagues.
-We can use the concept of flow to study how influence spreads through a network. For example, we could track how quickly support for a new policy spreads through a network of political activists.
-We can use the concept of flow to study how new ideas or innovations spread through a network. For example, we could track how quickly the use of a new technology spreads through a network of businesses.
-By conceptualizing the mobility table as a network, we can gain a deeper understanding of how information, influence, and other resources flow through society. This understanding can be used to inform policies that aim to improve the flow of resources and to promote social and economic development.
+Podemos usar el concepto de flujo para estudiar cómo se propagan nuevas ideas o nuevas ideas a través de redes. Por ejemplo, podemos determinar qué tan rápido se propaga el uso de las nuevas tecnologías en las redes empresariales[3].
+
+Al ver un diagrama de flujo como una red, podemos obtener una comprensión más profunda de cómo la información, la influencia y otros recursos se mueven en la sociedad. Esta comprensión se puede utilizar para desarrollar estrategias para mejorar los flujos de recursos y promover el desarrollo social y económico[1] [2] [3]. 
+
+
+\begin{table}[H]
+\centering
+\begin{tabularx}{\textwidth}{p{5cm}|p{9cm}}
+\hline
+\textbf{Concepto} & \textbf{Descripción} \\
+\hline
+Red ponderada & Representación de los patrones de cambio de ocupación de los trabajadores mediante una red donde cada ocupación es un nodo, y los bordes representan los trabajadores que se trasladan entre ocupaciones, con pesos asimétricos. \\
+\hline
+Matriz de adyacencia & Tabla que muestra el número de trabajadores que se mueven de una ocupación a otra, representa la red ponderada de movilidad ocupacional. \\
+\hline
+Conceptualización de la tabla de movilidad como una red & La tabla de movilidad puede ser conceptualizada como una red ponderada, lo que permite un enfoque diferente para representar y analizar la movilidad ocupacional. \\
+\hline
+Flujo de información e influencia en la red & La representación de la movilidad ocupacional como una red ponderada permite analizar el flujo de información y recursos a través de la red, considerando las conexiones directas e indirectas y la estructura general de la red. \\
+\hline
+Implicaciones de la conceptualización de la tabla de movilidad como una red & La representación de la movilidad ocupacional como una red ponderada permite el análisis del flujo de recursos, como información, influencia y otros recursos, y su propagación a través de la sociedad. Esto puede tener implicaciones importantes para el diseño de políticas y el desarrollo social y económico. \\
+\hline
+Uso del concepto de flujo en la investigación & El concepto de flujo en la red puede ser utilizado para estudiar la propagación de información, influencia, ideas o innovaciones en diversos contextos, como la difusión de ofertas de trabajo, el apoyo a políticas o la adopción de tecnología. \\
+\hline
+\end{tabularx}
+\end{table}
+
 
 \end{document}
