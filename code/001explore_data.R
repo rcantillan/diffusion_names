@@ -114,13 +114,16 @@ output_list <- map2(names_samples[-1], names_samples[-length(names_samples)],
 
 # Combine the data frames in the output list into a single data frame with distinct values by row. 
 result <- result%>%bind_rows(output_list)%>%distinct()
-result
+result$ano<-as.numeric(result$ano) # year to numeric
 
-
-
-
-
-
+# plot
+result %>%
+  ggplot(aes(x = ano, y = new_names)) +
+  geom_point()+
+  geom_smooth(method = "loess") + 
+  xlim(1921, 2022) +
+  stat_cor(method = "pearson", 
+           label.x = 2000, label.y = 1100) 
 
 
 
