@@ -26,13 +26,12 @@ names$comuna = stri_trans_general(str = names$comuna, id = "Latin-ASCII")
 names$nombre = stri_trans_general(str = names$nombre, id = "Latin-ASCII")
 
 # sample subset (stratified by "ano", "comuna")
-names_sample <- names %>% group_by(ano,comuna) %>% sample_frac(size=.1)
+names_sample <- names %>% group_by(ano,nombre,comuna) %>% sample_frac(size=.1)
 
 # create weighted network 
 ## group by year
 names_sample_1970_79 <- names_sample %>% uncount(cantidad) %>% filter(ano%in%1970:1979) %>%
   ungroup() %>% select(nombre, comuna) %>% as_tibble() 
-
 names_sample_1970_79<-names_sample_1970_79 %>% dplyr::mutate(comuna=recode(comuna, AISEN = "AYSEN")) # check
 
 # merge con atributos de 
@@ -143,7 +142,7 @@ result_list <- map(names_samples, ~ {
     top_n(600, wt = n) %>%
     arrange(desc(n))
   # Return the resulting data frame
-  top_300
+  top_600
 })
 
 # Combine the resulting data frames into one
@@ -212,32 +211,124 @@ ggraph(g, layout = "kk") +
   geom_node_point(aes(fill = type, size = all_degree),
                   colour = "#000000", shape = 21, stroke = 0.3) + 
   scale_fill_brewer(palette = "Set1", na.value = "gray53") + 
-  scale_size(range = c(3,8)) + 
+  scale_size(range = c(2,10)) + 
   #geom_node_text(aes(label = name), colour = "#000000", size = 3.5, family = "sans") + 
-  geom_node_label(aes(label = name), repel = TRUE, size = 2.5) +
-  #theme_graph() + 
+  geom_node_label(aes(label = name, filter=all_degree>=10), repel = TRUE, size = 2.5) +
+  theme_graph(background="white") + 
   theme(legend.position = "none")
-  #geom_node_text(aes(label = name), repel = TRUE) +
-  theme_void()
-
-# Display the result and the network map
-print(result)
-
+ 
 
 # network. 
 node_sizes%>%
-  filter(comuna%in%c("ANTOFAGASTA","SANTIAGO","PUERTO MONTT"))%>%
+  filter(comuna%in%c("ANTOFAGASTA","ESTACION CENTRAL","PUERTO MONTT"))%>%
 ggplot(aes(x=reorder_within(nombre, n, comuna), y=n, fill=comuna)) +
   geom_col(show.legend = FALSE) +
-  scale_fill_viridis_d(option = "D")+
-  facet_wrap(~comuna, ncol = 1, scales = "free_y") +
+  scale_fill_viridis_d(option = "G",direction = 1)+
+  facet_wrap(~comuna, ncol = 2, scales = "free_y") +
   coord_flip() +
   scale_x_reordered() +
   scale_y_continuous(expand = c(0,0)) +
   labs(title = "", y = "", x=NULL) +
-  theme_gray(base_size = 7)
+  #theme_gray(base_size = 7)+
+  theme(axis.ticks.y=element_blank(),
+        #legend.position = "top",
+        panel.grid.major.y=element_blank(),
+        plot.title = element_text(hjust = 0.5, size = 8),
+        axis.title = element_text(size=10),
+        axis.text.x = element_text(size = 9, hjust = 0.9),
+        axis.text.y = element_text(size = 9))
 
 
+node_sizes%>%
+  filter(comuna%in%c("PROVIDENCIA","INDEPENDENCIA"))%>%
+  ggplot(aes(x=reorder_within(nombre, n, comuna), y=n, fill=comuna)) +
+  geom_col(show.legend = FALSE) +
+  scale_fill_viridis_d(option = "G",direction = 1)+
+  facet_wrap(~comuna, ncol = 2, scales = "free_y") +
+  coord_flip() +
+  scale_x_reordered() +
+  scale_y_continuous(expand = c(0,0)) +
+  labs(title = "", y = "", x=NULL) +
+  #theme_gray(base_size = 7)+
+  theme(axis.ticks.y=element_blank(),
+        #legend.position = "top",
+        panel.grid.major.y=element_blank(),
+        plot.title = element_text(hjust = 0.5, size = 8),
+        axis.title = element_text(size=10),
+        axis.text.x = element_text(size = 9, hjust = 0.9),
+        axis.text.y = element_text(size = 9))
+
+
+
+# 50 nombres más comunes por comuna. 
+result <- map(names_samples, ~count(.x, comuna, nombre))
+result <- bind_rows(result)
+result <- result %>% group_by(comuna, nombre) %>% summarize(quantity = sum(n))
+result <- result %>% arrange(comuna, desc(quantity))
+result <- result %>% group_by(comuna) %>% top_n(30, quantity)
+
+result%>%
+  filter(comuna%in%c("LAS CONDES","VITACURA","PUENTE ALTO","SAN RAMON"))%>% #"LA REINA"
+  ggplot(aes(x=reorder_within(nombre, quantity, comuna), y=quantity, fill=comuna)) +
+  geom_col(show.legend = FALSE) +
+  scale_fill_viridis_d(option = "G",direction = 1)+
+  facet_wrap(~comuna, ncol = 2, scales = "free_y") +
+  coord_flip() +
+  scale_x_reordered() +
+  scale_y_continuous(expand = c(0,0)) +
+  labs(title = "", y = "", x=NULL) +
+  #theme_gray(base_size = 7)+
+  theme(axis.ticks.y=element_blank(),
+        #legend.position = "top",
+        panel.grid.major.y=element_blank(),
+        plot.title = element_text(hjust = 0.5, size = 8),
+        axis.title = element_text(size=10),
+        axis.text.x = element_text(size = 9, hjust = 0.9),
+        axis.text.y = element_text(size = 7))
+
+result%>%
+  filter(comuna%in%c("ARICA","COPIAPO","CONSTITUCION","AISEN"))%>%
+  ggplot(aes(x=reorder_within(nombre, quantity, comuna), y=quantity, fill=comuna)) +
+  geom_col(show.legend = FALSE) +
+  scale_fill_viridis_d(option = "G",direction = 1)+
+  facet_wrap(~comuna, ncol = 2, scales = "free_y") +
+  coord_flip() +
+  scale_x_reordered() +
+  scale_y_continuous(expand = c(0,0)) +
+  labs(title = "", y = "", x=NULL) +
+  #theme_gray(base_size = 7)+
+  theme(axis.ticks.y=element_blank(),
+        #legend.position = "top",
+        panel.grid.major.y=element_blank(),
+        plot.title = element_text(hjust = 0.5, size = 8),
+        axis.title = element_text(size=10),
+        axis.text.x = element_text(size = 9, hjust = 0.9),
+        axis.text.y = element_text(size = 9))
+
+
+# Customize the size of the nodes based on the frequency
+node_sizes <- result %>%
+  mutate(size = n/600) # Adjust the scaling factor as needed
+
+# Plot the network graph with differentiated node sizes
+graph <- ggplot() +
+  geom_node_point(aes(x = comuna, y = nombre, size = size, color = size), data = node_sizes) +
+  #scale_fill_viridis_c(guide = "legend") +
+  scale_color_viridis(option = "G",   direction = 1) +
+  scale_size_continuous(range = c(0, 6)) +
+  labs(x = "Commune", y = "Name") +
+  #theme_minimal() +
+  guides(size = "legend", colour = "legend") +
+  theme(axis.ticks.y=element_blank(),
+        #legend.position = "top",
+        panel.grid.major.y=element_blank(),
+        plot.title = element_text(hjust = 0.5, size = 8),
+        axis.title = element_text(size=10),
+        axis.text.x = element_text(size = 7,angle = 90, hjust = 1),
+        axis.text.y = element_text(size = 7))
+
+# Display the graph
+print(graph)
 
 
 
