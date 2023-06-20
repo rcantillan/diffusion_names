@@ -13,6 +13,7 @@ library(tidytext)
 library(graphlayouts)
 library(stringdist)
 library(bipartite)
+library(ggpubr)
 
 # setwd
 setwd("/home/rober/Documents/proyecto_nombres/wetransfer_ak002t0025787_2023-04-18_1401/AK002T0025787/Anexo_Respuesta_AK002T0025787")
@@ -25,7 +26,7 @@ names<-separate(names, ano, into = c("ano","mes"), sep = c(4))
 names$comuna = stri_trans_general(str = names$comuna, id = "Latin-ASCII")
 names$nombre = stri_trans_general(str = names$nombre, id = "Latin-ASCII")
 
-# sample subset (stratified by "ano", "comuna")
+# sample subset (stratified by "ano", "comuna") 10%
 names_sample <- names %>% group_by(ano,nombre,comuna) %>% sample_frac(size=.1)
 
 # create weighted network 
@@ -37,6 +38,8 @@ names_sample_1970_79<-names_sample_1970_79 %>% dplyr::mutate(comuna=recode(comun
 # merge con atributos de 
 names_sample_1970_79<-names_sample_1970_79%>%group_by(nombre, comuna) %>% count()
   
+
+
 
 
 # find similar string (similar groups = smg)
@@ -60,15 +63,12 @@ comunas_x<-names_sample %>%
 
 
 
-#Antes de hacer la proyeccion de la red, seria bueno tener ciertos descriptivos basicos. 
+# Proyeccion de la red, seria bueno tener ciertos descriptivos basicos. 
 #Por ejemplo, 
 
-# 1. Cuantos nombres nuevos hay por ano? 
-# 2. Cuan comun son ciertos nombres, es decir, en que proporcion de comunas aparecen los nombres por comuna? 
-# 3. Hay alguna division territorial en como la gente da nombres a sus hijos? Hay alguna diferencia entre el sur y el norte (sur/norte de Stgo)? 
-
-#Este tipo de informacion nos puede ayudar a darnos una idea de como va a ser la red de nombres.
-
+# 1. Nombres nuevos por ano 
+# 2. Frecuencia de nombres: en que proporcion de comunas aparecen los nombres por comuna? 
+# 3. Segregación: ¿Hay alguna division territorial en como la gente da nombres a sus hijos? ¿Hay alguna diferencia entre el sur y el norte (sur/norte de Stgo)? 
 
 
 # Counting Unique Values by Group Using (Applying group_by & summarise)
@@ -89,10 +89,10 @@ new_values_count <- map_int(2:length(names_samples), function(i) {
   current_df <- names_samples[[i]]
   previous_df <- names_samples[[i - 1]]
   # Count the number of unique values in "nombre" column of current_df that are not present in previous_df
-  sum(!current_df$nombre %in% previous_df$nombre, na.rm = TRUE)
+  sum(!(current_df$nombre %in% previous_df$nombre), na.rm = TRUE)
 })
 
-#new_values_count
+new_values_count
 
 #In the code above, we use the map_int function from purrr to iterate over the 
 #indices of the data frames in the list, starting from the second data frame (index 2). 
@@ -102,7 +102,7 @@ new_values_count <- map_int(2:length(names_samples), function(i) {
 #values to get the count of new values in the "name" column for that particular data frame.
 
 
-# Assuming your list of data frames is called "data_frames_list"
+# Assuming your list of data frames is called "names_samples"
 # Initialize an empty list to store the results
 output_list <- vector("list", length(names_samples))
 
@@ -113,7 +113,7 @@ output_list <- map2(names_samples[-1], names_samples[-length(names_samples)],
                     ~ tibble(ano = .x$ano, new_names = length(setdiff(.x$nombre, .y$nombre))))
 
 # Combine the data frames in the output list into a single data frame with distinct values by row. 
-result <- result%>%bind_rows(output_list)%>%distinct()
+result <- output_list%>%bind_rows(output_list)%>%distinct()
 result$ano<-as.numeric(result$ano) # year to numeric
 
 # plot
@@ -123,7 +123,7 @@ result %>%
   geom_smooth(method = "loess") + 
   xlim(1921, 2021) +
   stat_cor(method = "pearson", 
-           label.x = 2000, label.y = 1100) +
+           label.x = 2000, label.y = 100) +
   labs(y = "New names per year (n)", x = "Year")
   
 
@@ -197,26 +197,21 @@ attr<-rbind(nodes1,nodes2)
 attr<-unique(attr)
 
 g <- graph_from_data_frame(d=node_sizes, vertices = attr)
+#g
+
+ggraph(g, layout = "kk") + 
+	 geom_edge_link0(aes(width = n, colour = n), edge_alpha = 1, ends = "last", type = "closed") + 
+	 scale_edge_colour_gradient(low = "#C2C2C2", high = "#333333") + 
+   scale_edge_width(range = c(0.3, 1.8)) + 
+   scale_edge_alpha(range = c(0.1, 3)) + 
+	 geom_node_point(aes(fill = type, size = all_degree), colour = "#FFFFFF", shape = 21, stroke = 0.3) + 
+	 scale_fill_brewer(palette = "Set1", na.value = "gray53") + 
+   scale_size(range = c(2,10)) +
+   geom_node_label(aes(label = name, filter=all_degree>=10), repel = TRUE, size = 2.5) +
+	 theme_graph(background="white") + 
+    theme(legend.position = "none")
 
 
-# Customize the appearance of the nodes and edges
-ggraph(g, layout = "kk") +
-  geom_edge_link0(aes(alpha = size, width = size, colour = n), 
-                  arrow = arrow(angle = 30,length = unit(0.15, "inches"), ends = "last", type = "closed")) + 
-  scale_edge_colour_gradient(low = "#87CEFF", high = "#27408B") + 
- # geom_edge_arc2(aes(alpha = size, width = size, colour = n), 
- #               arrow = arrow(angle = 30,length = unit(0.15, "inches"), ends = "last", type = "closed")) +
-  scale_edge_width(range = c(0.3, 1.8)) + 
-  scale_edge_alpha(range = c(0.1, 1)) + 
-  geom_node_point(aes(fill = type, size = all_degree),
-                  colour = "#000000", shape = 21, stroke = 0.3) + 
-  scale_fill_brewer(palette = "Set1", na.value = "gray53") + 
-  scale_size(range = c(2,10)) + 
-  #geom_node_text(aes(label = name), colour = "#000000", size = 3.5, family = "sans") + 
-  geom_node_label(aes(label = name, filter=all_degree>=10), repel = TRUE, size = 2.5) +
-  theme_graph(background="white") + 
-  theme(legend.position = "none")
- 
 
 # network. 
 node_sizes%>%
@@ -329,7 +324,6 @@ graph <- ggplot() +
 
 # Display the graph
 print(graph)
-
 
 
 
