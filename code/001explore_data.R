@@ -26,7 +26,7 @@ names<-separate(names, ano, into = c("ano","mes"), sep = c(4))
 names$comuna = stri_trans_general(str = names$comuna, id = "Latin-ASCII")
 names$nombre = stri_trans_general(str = names$nombre, id = "Latin-ASCII")
 
-# sample subset (stratified by "ano", "comuna") 10%
+# sample subset (stratified by "ano", "comuna") 
 names_sample <- names %>% group_by(ano,nombre,comuna) %>% sample_frac(size=.1)
 
 # create weighted network 
