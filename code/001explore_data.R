@@ -27,7 +27,7 @@ names$comuna = stri_trans_general(str = names$comuna, id = "Latin-ASCII")
 names$nombre = stri_trans_general(str = names$nombre, id = "Latin-ASCII")
 
 # sample subset (stratified by "ano", "comuna") 
-names_sample <- names %>% group_by(ano,nombre,comuna) %>% sample_frac(size=.1)
+names_sample <- names %>% group_by(ano,comuna) %>% sample_frac(size=.1)
 
 # create weighted network 
 ## group by year
@@ -38,8 +38,6 @@ names_sample_1970_79<-names_sample_1970_79 %>% dplyr::mutate(comuna=recode(comun
 # merge con atributos de 
 names_sample_1970_79<-names_sample_1970_79%>%group_by(nombre, comuna) %>% count()
   
-
-
 
 
 # find similar string (similar groups = smg)
@@ -126,8 +124,6 @@ result %>%
            label.x = 2000, label.y = 100) +
   labs(y = "New names per year (n)", x = "Year")
   
-
-
 # Assuming your list of data frames is named "df_list"
 # Use map to iterate over each data frame in the list
 result_list <- map(names_samples, ~ {
@@ -150,7 +146,6 @@ combined_df <- bind_rows(result_list)
 
 # Rename the count column to "amount"
 combined_df <- rename(combined_df, amount = n)
-
 
 # Combine "name" and "comuna" from all data frames into a single data frame
 combined_df <- bind_rows(names_samples, .id = "df_id") %>%
