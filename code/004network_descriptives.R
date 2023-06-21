@@ -95,22 +95,22 @@ p5<-bipartite::as.one.mode(a5, project="lower")
 a6<-ams[[6]]
 p6<-bipartite::as.one.mode(a6, project="lower")
 
-a7<-ams[[7]]
-p7<-bipartite::as.one.mode(a7, project="lower")
+#a7<-ams[[7]]
+#p7<-bipartite::as.one.mode(a7, project="lower")
+#
+#a8<-ams[[8]]
+#p8<-bipartite::as.one.mode(a8, project="lower")
+#
+#a9<-ams[[9]]
+#p9<-bipartite::as.one.mode(a9, project="lower")
+#
+#a10<-ams[[10]]
+#p10<-bipartite::as.one.mode(a10, project="lower")
+#
+#a11<-ams[[11]]
+#p11<-bipartite::as.one.mode(a11, project="lower")
 
-a8<-ams[[8]]
-p8<-bipartite::as.one.mode(a8, project="lower")
-
-a9<-ams[[9]]
-p9<-bipartite::as.one.mode(a9, project="lower")
-
-a10<-ams[[10]]
-p10<-bipartite::as.one.mode(a10, project="lower")
-
-a11<-ams[[11]]
-p11<-bipartite::as.one.mode(a11, project="lower")
-
-one_mode_projections <- list(p,p2,p3,p4,p5,p6,p7)
+one_mode_projections <- list(p,p2,p3,p4,p5,p6)
 rm(ams)
 #save(one_mode_projections, file = "/home/rober/Documents/proyecto_nombres/one_mode_projections.RData")
 
@@ -141,15 +141,64 @@ for (i in 1:length(bb)) {
   edgelists[[i]] <- bb_tibble
 }
 
+rm(edgelists)
+
 # Convert each edgelist to a network object
 network_objects <- list()
 for (i in 1:length(edgelists)) {
   network_objects[[i]] <- graph_from_data_frame(edgelists[[i]], directed=FALSE) %>% as_tbl_graph()
 }
 
+# Create an empty data frame to store the results
+result_df <- data.frame()
 
+# Loop through each network object and calculate the measures
+for (i in 1:length(network_objects)) {
+  g <- network_objects[[i]]  # Get the current network object
+  
+  # Calculate the measures
+  n_componentsIg <- components(g)$no
+  size_lcomponentIg <- max(components(g)$csize)
+  size_2componentIg <- sort(components(g)$csize)[length(components(g)$csize) - 1]
+  #peripheryIg <- gsize(g) - max(components(g)$csize)
+  ignore <- gsize(g)
+  centralizationIg <- centralization.degree(g)$centralization
+  #edges <- ecount(g)
+  global_transitivity <- transitivity(g, type = "global")
+  local_transitivity  <- transitivity(g, type="local")
+  DegreeAv <- mean(degree(g, mode = "all"))
+  StdDegree <- sd(degree(g, mode = "all"))
+  #density <- graph.density(g, loop = FALSE)
+  diameter <- diameter(g, weights = NA)
+  isolate <- length(degree(g)[degree(g) == 0])
+  
+  # Create a temporary data frame with the calculated measures
+  temp_df <- data.frame(
+    n_componentsIg,
+    size_lcomponentIg,
+    size_2componentIg,
+    #peripheryIg,
+    ignore,
+    centralizationIg,
+    #edges,
+    global_transitivity,
+    local_transitivity,
+    DegreeAv,
+    StdDegree,
+    #density,
+    diameter,
+    isolate
+  )
+  
+  # Transpose the temporary data frame and add it to the result data frame
+  result_df <- rbind(result_df, t(temp_df))
+}
 
+# Set the column names of the result data frame as the network object names
+colnames(result_df) <- names(network_objects)
 
+# Print the result data frame
+result_df
 
 
 
