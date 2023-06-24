@@ -115,7 +115,7 @@ one_mode_projections <- list(p,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11)
 save(one_mode_projections, file = "/home/rober/Documents/proyecto_nombres/one_mode_projections.RData")
 rm(p,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11)
 
-one_mode_projections <- map(ams, ~bipartite::as.one.mode(., project="lower"))
+#one_mode_projections <- map(ams, ~bipartite::as.one.mode(., project="lower"))
 #print(one_mode_projections)
 
 # projection (con  bipartite package)
@@ -149,7 +149,7 @@ for (i in 1:length(edgelists)) {
   network_objects[[i]] <- graph_from_data_frame(edgelists[[i]], directed=FALSE) %>% as_tbl_graph()
 }
 
-rm(bb_tibble,bb,edgelists,one_mode_projections,list_decades)
+rm(bb_tibble,bb,edgelists,one_mode_projections,list_decades,ams,names,names_sample)
 
 # network descriptives. 
 calculate_network_measures <- function(g) {
