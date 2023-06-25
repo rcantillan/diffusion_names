@@ -194,13 +194,22 @@ df <- do.call(rbind, results)
 rownames(df)<-c("1920-1929","1930-1939","1940-1949","1950-1959","1960-1969",
                 "1970-1979","1980-1989","1990-1999","2000-2009","2010-2019",
                 "2020-2022")
+
+df$row_names <- row.names(df)
+
 # descriptives 
 df %>%
   kbl(caption = "Descriptives networks names") %>%
   kable_classic(full_width = T, html_font = "Cambria")
 
+# Reshape the data into long format
+df_long <- tidyr::gather(df, key = "column", value = "value", -row_names)
 
-
+# Plot the data using ggplot
+ggplot(df_long, aes(x = row_names, y = value, color = column)) +
+  geom_line() +
+  labs(x = "Row Names", y = "Value") +
+  theme_minimal()
 
 
 
