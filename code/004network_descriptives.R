@@ -119,12 +119,6 @@ rm(p,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11)
 #one_mode_projections <- map(ams, ~bipartite::as.one.mode(., project="lower"))
 #print(one_mode_projections)
 
-# projection (con  bipartite package)
-# If two communes A and B interact with names 1 to 5, then the two interaction vectors for A with 1 to 5 and B with 1 to 5 are placed next to each other, 
-# and for each name 1 to 5, it holds the minimum for each of these 5 values for the two vectors (the parallel minimum). 
-# The idea is that the similarity between communes A and B is due to their lower commonality in the interactions. 
-# The five parallel minimum values are then added to obtain the final weight for this link.
-
 # project with backbone package
 bb <- map(one_mode_projections, ~ backbone::disparity(., alpha = 0.01, narrative = TRUE))
 #print(bb)
