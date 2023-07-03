@@ -21,6 +21,7 @@ library(furrr)
 library(progressr)
 library(tidygraph)
 library(kableExtra)
+library(xtable)
 
 # setwd
 setwd("/home/rober/Documents/proyecto_nombres/wetransfer_ak002t0025787_2023-04-18_1401/AK002T0025787/Anexo_Respuesta_AK002T0025787")
@@ -201,6 +202,12 @@ df$row_names <- row.names(df)
 df %>%
   kbl(caption = "Descriptives networks names") %>%
   kable_classic(full_width = T, html_font = "Cambria")
+
+df$row_names<-NULL
+xtable(df, 
+       floating = TRUE, 
+       floating.environment = "sidewaystable")
+
 
 # Reshape the data into long format
 df_long <- tidyr::gather(df, key = "column", value = "value", -row_names)
