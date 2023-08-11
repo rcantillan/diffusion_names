@@ -98,15 +98,16 @@ id_comunas_ipums$name <- toupper(id_comunas_ipums$name)
 #Yo aplicaría métodos de community detection solo cuando tengamos esta red menos densa. 
 #En relación con esto, sería bueno tener una idea de cómo se distribuyen los nombres en el tiempo (por ej., por década), especialmente la cantidad de nombres nuevos que aparecen en el tiempo.
 
+glimpse(ipums)
 
 
-# merge variables socioeconómicas. 
+# variables socioeconómicas. 
 ## subset 1970 
-ipums_1970<-ipums%>%filter(year==1970)
-glimpse(ipums_1970)
+#ipums_1970<-ipums%>%filter(year==1970)
+#glimpse(ipums_1970)
 
 ## select variables
-ipums_1970<-ipums_1970%>%
+ipums<-ipums%>%
   filter(relate%in%c(1,2))%>%
   mutate(isei=case_when(occisco==1~68, 
                         occisco==2~65,
@@ -124,7 +125,13 @@ ipums_1970<-ipums_1970%>%
                         occisco==99~0))%>%
   replace_with_na(replace = list(yrschool = c("90","91","92","93","94","95","96","98","99")))%>%
   select(serial
-         ,id=geo2_cl1970
+         ,year
+         ,geo2_cl1970
+         ,geo2_cl1960
+         ,geo2_cl1982
+         ,geo2_cl1992
+         ,geo2_cl2002
+         ,geo2_cl2017
          #,hhwt
          #,gq
          #,pernum
@@ -137,70 +144,126 @@ ipums_1970<-ipums_1970%>%
          ,isei
          )
 
-# to wide and create means
-ipums_1970<-ipums_1970 %>%
-  pivot_wider(names_from = relate, values_from = c(yrschool,isei))%>%
-  mutate(prom_school=(yrschool_1+yrschool_2)/2)%>%
-  mutate(prom_isei=(isei_1+isei_2)/2) 
-  
-# imputar valor alto cuando una de las columnas tiene NA
-for (i in 1:dim(ipums_1970)[1]) {
-  if (is.na(ipums_1970$isei_1)[i] | is.na(ipums_1970$isei_2)[i]) {
-    ipums_1970$prom_isei[i] <- pmax(ipums_1970$isei_1[i], ipums_1970$isei_2[i], na.rm = TRUE)
-  }
-  if (is.na(ipums_1970$yrschool_1)[i] | is.na(ipums_1970$yrschool_2)[i]) { 
-    ipums_1970$prom_school[i] <- pmax(ipums_1970$yrschool_1[i], ipums_1970$yrschool_2[i], na.rm = TRUE)
+
+#ipums<-ipums %>%  pivot_wider(names_from = relate, values_from = c(yrschool,isei))
+ipums <- ipums %>% pivot_wider(names_from = relate, values_from = c(yrschool, isei), values_fn = list(isei = mean, yrschool = mean))
+
+
+# Lista de todas las variables que tienen "geo2_cl" en su nombre
+geo_vars <- grep("geo2_cl", colnames(ipums), value = TRUE)
+
+# Unir las variables en una columna llamada "id_comuna" y pivot wider para promediar considerando los integrantes. 
+ipums <- ipums %>%
+  unite("id_comuna", all_of(geo_vars), sep = "|", na.rm = TRUE) %>%
+  mutate(id_comuna = as.numeric(str_extract(id_comuna, "\\d+"))) 
+
+
+
+# imputar valor alto cuando una de las columnas tiene NA (opción 1)
+
+# Función para calcular el promedio y manejar NAs (opción 2 `purrr`)
+promedio_con_na <- function(x, y) {
+  if (is.na(x) | is.na(y)) {
+    return(mean(c(x, y), na.rm = TRUE))
+  } else {
+    return((x + y) / 2)
   }
 }
 
+# Calcular los promedios usando pmap
+ipums <- ipums %>%
+  mutate(
+    prom_isei = pmap_dbl(select(., isei_1, isei_2), ~promedio_con_na(..1, ..2)),
+    prom_school = pmap_dbl(select(., yrschool_1, yrschool_2), ~promedio_con_na(..1, ..2))
+  )
+
+
+
 # plot
-median_isei <- ipums_1970 %>% pull(prom_isei) %>% median() %>% signif(6)
-ggplot(ipums_1970, aes(x = prom_isei, y = after_stat(density))) +
-  geom_histogram(bins = 80) + 
-  geom_density(color = "green", linewidth = .2, fill = 'green', alpha = 0.3) +
+median_isei <- ipums %>% pull(prom_isei) %>% median(na.rm = TRUE) %>% signif(6)
+ggplot(ipums, aes(x = prom_isei, y = after_stat(density))) +
+  geom_histogram(bins = 50) + 
+  geom_density(color = NA,  fill = 'blue', alpha = 0.3) +
   #scale_x_log10()+
-  geom_vline(xintercept=median_isei, size=.5, color="red") +
-  labs(x="Prestigio ocupacional", title="IPUMS - Chile 1970")
+  geom_vline(xintercept=median_isei, size=1, color="red") +
+  labs(x="Prestigio ocupacional", title="IPUMS Chile 1960-2017")
 
 
-median_school <- ipums_1970 %>% pull(prom_school) %>% median(na.rm=TRUE) %>% signif(6)
-ggplot(ipums_1970, aes(x = prom_school, y = after_stat(density))) +
+# Crear el gráfico
+ggplot(ipums, aes(x = prom_isei, y = after_stat(density))) +
+  geom_histogram(bins = 40) +  # Ajustar el número de bins
+  geom_density(color = NA, fill = 'blue', alpha = 0.2) +
+  scale_x_continuous(trans = "log10") +  # Cambiar la escala a logarítmica
+  geom_vline(xintercept = median_isei, size = 1, color = "red") +
+  labs(x = "Prestigio ocupacional (log scale)", title = "IPUMS Chile 1970-2017") 
+
+
+
+# plot
+median_school <- ipums %>% pull(prom_school) %>% median(na.rm = TRUE) %>% signif(6)
+ggplot(ipums, aes(x = prom_school, y = after_stat(density))) +
   geom_histogram(bins = 80) + 
-  geom_density(color = "green", linewidth = .2, fill = 'green', alpha = 0.3) + 
-  geom_vline(xintercept=median_school, size=.5, color="red") +
-  labs(x="Años escolaridad", title="IPUMS - Chile 1970")
+  geom_density(color = NA,  fill = 'blue', alpha = 0.3) +
+  #scale_x_log10()+
+  geom_vline(xintercept=median_school, size=1, color="red") +
+  labs(x="Nivel educativo", title="IPUMS Chile 1960-2017")
 
 
 # unir códigos comunales con datos
-id_comunas_1970<-id_comunas_ipums%>%filter(year==1970)
-id_comunas_1970$id<-as.numeric(id_comunas_1970$id)
+id_comunas_ipums$id<-as.numeric(id_comunas_ipums$id)
+id_comunas_ipums<-id_comunas_ipums%>%distinct(.keep_all = TRUE)
+ipums<-ipums%>%rename(id=id_comuna)
 
-ipums_1970<-left_join(ipums_1970, id_comunas_1970, by="id", relationship = "many-to-many")%>%
-  select(serial, id, name, year, yrschool_1, yrschool_2, isei_1, isei_2, prom_school, prom_isei)
+# Join
+ipums<-left_join(ipums, id_comunas_ipums, by=c("id", "year"))%>%
+  select(serial, id, name, year, prom_school, prom_isei)
 # detalle: el "serial" se va a repetir tantas veces como nombres comunales tenga el id de comuna. 
 
 
-# crear data socioeconómica por comuna (1970)
-gse_comunas_1970<-ipums_1970 %>%
-  group_by(name)%>%
-  summarize(median(prom_isei),
-            median(prom_school, na.rm=TRUE))
+# mediana anual por comuna de los promedios por hogar. 
+gse_comunas<-ipums %>%
+  group_by(year, name) %>%
+  summarise(median_prom_school = median(prom_school, na.rm = TRUE),
+            median_prom_isei = median(prom_isei, na.rm = TRUE))
 
-colnames(gse_comunas_1970)<-c("comuna", "prom_isei", "prom_school")
+colnames(gse_comunas)<-c("ano","comuna","median_prom_isei","median_prom_school")
 # gse_comunas_xxx se debe pegar a los nombres. 
 # el proceso debe repetirse por década IPUMS. 
 
 
 # Plot
-gse_comunas_1970 %>% pivot_longer(cols=c('prom_isei', 'prom_school'),
+gse_comunas %>% pivot_longer(cols=c('median_prom_isei', 'median_prom_school'),
                       names_to='gse',
                       values_to='value') %>% 
   ggplot(aes(x=value, fill = gse, colour = gse)) + 
   geom_density(alpha = 0.1) +
-  labs(title= "SEG distribution 1970", x="") 
+  labs(title= "SEG distribution", x="") 
 
 
-rm(names_sample)
-# unir con datos de nombres. 
-names_sample_1970_79<-left_join(names_sample_1970_79, gse_comunas_1970, by="comuna")
+# Unir con datos de nombres.
+gse_comunas$ano<-as.character(gse_comunas$ano)
+names_sample_p<-left_join(names_sample, gse_comunas, by=c("comuna", "ano"))
+
+# Convertir las columnas "comuna" y "ano" a caracteres en ambos data frames
+names_sample <- names_sample %>% mutate(comuna = as.character(comuna), ano = as.character(ano))
+gse_comunas <- gse_comunas %>% mutate(comuna = as.character(comuna), ano = as.character(ano))
+
+# Realizar la unión utilizando left_join()
+names_sample_p <- left_join(names_sample, gse_comunas, by = c("comuna", "ano"))
+#glimpse(names_sample_p)
+
+
+# Repetir valores para "median_prom_isei" y "median_prom_school"
+names_sample_p_filled <- names_sample_p %>%
+  mutate(ano_prefix = substr(ano, 1, 3)) %>%
+  group_by(comuna, ano_prefix) %>%
+  mutate(
+    median_prom_isei = ifelse(is.na(median_prom_isei), median(median_prom_isei, na.rm = TRUE), median_prom_isei),
+    median_prom_school = ifelse(is.na(median_prom_school), median(median_prom_school, na.rm = TRUE), median_prom_school)
+  ) %>%
+  ungroup() %>%
+  select(-ano_prefix)
+
+
+
 

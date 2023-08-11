@@ -29,6 +29,9 @@ names$nombre = stri_trans_general(str = names$nombre, id = "Latin-ASCII")
 # sample subset (stratified by "ano", "comuna") 
 names_sample <- names %>% group_by(ano,comuna) %>% sample_frac(size=.1)
 
+
+
+
 # create weighted network 
 ## group by year
 names_sample_1970_79 <- names_sample %>% uncount(cantidad) %>% filter(ano%in%1970:1979) %>%

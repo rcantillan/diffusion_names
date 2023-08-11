@@ -214,6 +214,18 @@ ggplot(df_long, aes(x = row_names, y = value, color = column)) +
 
 
 
+- Roberto Cantillan C. 
+- Sociólogo y Magister en Ciencias Sociales. 
+- Estudiante doctorado en Sociología PUC
+- Actualmente es asistente en proyecto FONDECYT y del Núcleo Milenio para el Estudio de Desajustes del Mercado Laboral (LM²C²)
+
+- Desigualdades, Movilidad, Consolidación y homofilia, Mercados laborales. 
+- Análisis de redes sociales, modelosmultinivel, inferencia causal.
+
+
+
+
+
 
 
 
