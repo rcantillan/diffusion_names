@@ -26,46 +26,71 @@ names<-separate(names, ano, into = c("ano","mes"), sep = c(4))
 names$comuna = stri_trans_general(str = names$comuna, id = "Latin-ASCII")
 names$nombre = stri_trans_general(str = names$nombre, id = "Latin-ASCII")
 
-# sample subset (stratified by "ano", "comuna") 
-names_sample <- names %>% group_by(ano,comuna) %>% sample_frac(size=.1)
+# crear data agrupada por año y quitar 2.5 superior e inferior de acuerdo da la distribución de cantidad agrupada por año. 
+## sumar cantidad de nombres por año. 
+names <- names %>%
+  group_by(ano, comuna, nombre) %>%
+  summarize(cantidad = sum(cantidad)) 
+glimpse(names)
 
+names_dist <- names %>%
+  group_by(nombre) %>%
+  summarize(cantidad_total = sum(cantidad))
+
+names_dist %>%
+arrange(desc(cantidad_total))
+
+
+
+
+# filtrar datos  ---------------------------------------------------------------
+# Crear un nuevo data frame con los percentiles 2.5 y 97.5
+#names_filtered <- names_dist %>%
+#  #group_by(ano) %>%
+#  filter(cantidad_total >= quantile(cantidad_total, 0.015) & cantidad_total <= quantile(cantidad_total, 0.985)) %>%
+#  ungroup()
+
+names_filtered <- names %>% filter(!nombre %in% c("MARIA ", "JOSE ", "JUAN ", "LUIS " )) # crterio: eliminar los 4 más comunes, en gral. presentes en todas las comunas. 
+#head(names_filtered)  
+
+
+# sample subset (stratified by "ano", "comuna") 
+# names_sample <- names %>% group_by(ano,comuna) %>% sample_frac(size=.1)
+
+# Paso 1: Crear estratos basados en las dos variables
+strata <- names %>%
+  group_by(ano, comuna) %>%
+  summarize(count = n()) %>%
+  ungroup()
+
+# Paso 2: Calcular el tamaño de muestra deseado para cada estrato (por ejemplo, el 10% de cada estrato)
+strata <- strata %>%
+  mutate(sample_size = ceiling(0.1 * count))  # Puedes ajustar el porcentaje de muestra según tus necesidades
+
+# Paso 3: Realizar el muestreo en cada estrato
+names_sample <- names %>%
+  inner_join(strata, by = c("ano", "comuna")) %>%
+  group_by(ano, comuna) %>%
+  sample_n(size = first(sample_size))  # Usamos first() para obtener el tamaño de muestra del primer registro en cada estrato
+
+# sumar cantidad de nombres por año. 
+names_sample <- names_sample %>%
+  group_by(ano, comuna, nombre) %>%
+  summarize(cantidad = sum(cantidad))
 
 
 
 # create weighted network 
 ## group by year
-names_sample_1970_79 <- names_sample %>% uncount(cantidad) %>% filter(ano%in%1970:1979) %>%
-  ungroup() %>% select(nombre, comuna) %>% as_tibble() 
-names_sample_1970_79<-names_sample_1970_79 %>% dplyr::mutate(comuna=recode(comuna, AISEN = "AYSEN")) # check
+#names_sample_1970_79 <- names_sample %>% uncount(cantidad) %>% filter(ano%in%1970:1979) %>%
+#  ungroup() %>% select(nombre, comuna) %>% as_tibble() 
+#names_sample_1970_79 <- names_sample_1970_79 %>% dplyr::mutate(comuna=recode(comuna, AISEN = "AYSEN")) # check
 
 # merge con atributos de 
-names_sample_1970_79<-names_sample_1970_79%>%group_by(nombre, comuna) %>% count()
+#names_sample_1970_79 <- names_sample_1970_79 %>% group_by(nombre, comuna) %>% count()
   
 
-
-# find similar string (similar groups = smg)
-## option 1
-similar_groups_str <- function(x, thresh = 0.8, method = "soundex"){
-  grp <- integer(length(x))
-  comuna <- x
-  x <- tolower(x)
-  for(i in seq_along(comuna)){
-    if(!is.na(comuna[i])){
-      sim <- stringdist::stringsim(x[i], x, method = method)
-      k <- which(sim > thresh & !is.na(comuna))
-      grp[k] <- i
-      is.na(comuna) <- k
-    }
-  }
-  grp
-}
-comunas_x<-names_sample %>%
-  mutate(group = comuna[similar_groups_str(comuna, thresh = 0.7, method = "jw")]) %>% count(group)
-
-
-
-# Proyeccion de la red, seria bueno tener ciertos descriptivos basicos. 
-#Por ejemplo, 
+# Estadísticos descriptivos ---------------------------------------------------
 
 # 1. Nombres nuevos por ano 
 # 2. Frecuencia de nombres: en que proporcion de comunas aparecen los nombres por comuna? 
@@ -73,63 +98,54 @@ comunas_x<-names_sample %>%
 
 
 # Counting Unique Values by Group Using (Applying group_by & summarise)
-data_count_2 <- names_sample %>%    
-  group_by(ano) %>%
-  summarise(count = n_distinct(nombre))
-data_count_2   
 
 # create list by year
-names_sample <- names_sample %>% group_by(ano)
-names_samples<-names_sample%>%group_split(ano)
+names <- names %>% group_by(ano)
+names <- names %>% group_split(ano)
 
 # Count the number of unique values in "name" column of current_df that are not present in previous_df
-n<-setdiff(names_samples[[2]]$nombre, names_samples[[1]]$nombre)
-#n
-
-new_values_count <- map_int(2:length(names_samples), function(i) {
-  current_df <- names_samples[[i]]
-  previous_df <- names_samples[[i - 1]]
-  # Count the number of unique values in "nombre" column of current_df that are not present in previous_df
-  sum(!(current_df$nombre %in% previous_df$nombre), na.rm = TRUE)
-})
-
-new_values_count
-
-#In the code above, we use the map_int function from purrr to iterate over the 
-#indices of the data frames in the list, starting from the second data frame (index 2). 
-#For each iteration, we retrieve the current and previous data frames using the index. 
-#Then, we use the %in% operator to check which values in the "name" column of the current 
-#data frame are not present in the previous data frame. Finally, we calculate the sum of TRUE 
-#values to get the count of new values in the "name" column for that particular data frame.
+n<-setdiff(names[[5]]$nombre, names[[4]]$nombre)
+summary(n)
 
 
-# Assuming your list of data frames is called "names_samples"
-# Initialize an empty list to store the results
-output_list <- vector("list", length(names_samples))
+# Contar nombres nuevos por año
+nombres_nuevos_por_ano <- numeric(length(names))
 
-# Iterate over the list of data frames using purrr's map2 function
-# Compare the "name" column of each data frame with the previous data frame
-# Count the number of new values using setdiff function
-output_list <- map2(names_samples[-1], names_samples[-length(names_samples)],
-                    ~ tibble(ano = .x$ano, new_names = length(setdiff(.x$nombre, .y$nombre))))
+for (i in 2:length(names)) {
+  # Obtener los nombres únicos del año actual
+  nombres_ano_actual <- names[[i]]$nombre
+  # Obtener los nombres únicos del año anterior
+  nombres_ano_anterior <- names[[i - 1]]$nombre
+  # Calcular la cantidad de nombres nuevos
+  nombres_nuevos_por_ano[i] <- length(setdiff(nombres_ano_actual, nombres_ano_anterior))
+}
 
-# Combine the data frames in the output list into a single data frame with distinct values by row. 
-result <- output_list%>%bind_rows(output_list)%>%distinct()
-result$ano<-as.numeric(result$ano) # year to numeric
-
+#nombres_nuevos_por_ano
 # plot
-result %>%
+resultados <- data.frame(
+  ano = 1920:2021, # Ajusta los años según tus datos
+  new_names = nombres_nuevos_por_ano) %>%
   ggplot(aes(x = ano, y = new_names)) +
   geom_point()+
   geom_smooth(method = "loess") + 
-  xlim(1921, 2021) +
+  xlim(1920, 2021) +
   stat_cor(method = "pearson", 
            label.x = 2000, label.y = 100) +
   labs(y = "New names per year (n)", x = "Year")
-  
+
+resultados
+
+# usamos names_filtered (sin los nombres más y menos comunes)
+# create list by year
+names_filtered <- names_filtered %>% group_by(ano)
+names_filtered <- names_filtered %>% group_split(ano)
+#names_filtered[[1]]
+
+# Supongamos que tienes una lista llamada names_filtered que contiene tus data frames
+
 # Assuming your list of data frames is named "df_list"
 # Use map to iterate over each data frame in the list
-result_list <- map(names_samples, ~ {
+result_list <- map(names_filtered, ~ {
   # Group by "name" and "comuna" and count occurrences
   count_df <- count(.x, nombre, comuna) %>%
     arrange(desc(n))
@@ -151,17 +167,17 @@ combined_df <- bind_rows(result_list)
 combined_df <- rename(combined_df, amount = n)
 
 # Combine "name" and "comuna" from all data frames into a single data frame
-combined_df <- bind_rows(names_samples, .id = "df_id") %>%
+combined_df <- bind_rows(names_filtered, .id = "df_id") %>%
   select(df_id, ano, comuna, nombre) %>%
   count(nombre, comuna, sort = TRUE)
 
 top_names <- combined_df %>%
-  top_n(600, n) %>%
+  top_n(400, n) %>%
   arrange(desc(n))
 
 # Customize the size of the nodes based on the frequency
 node_sizes <- top_names %>%
-  mutate(size = n/600) # Adjust the scaling factor as needed
+  mutate(size = n/400) # Adjust the scaling factor as needed
 
 # Plot the network graph with differentiated node sizes
 graph <- ggplot() +
@@ -182,6 +198,44 @@ graph <- ggplot() +
 
 # Display the graph
 print(graph)
+
+
+
+# block modelling 
+library(sbm)
+library(kableExtra)
+nm<-node_sizes%>%select(nombre, comuna, size)
+nm<-nm %>% pivot_wider(names_from = comuna, values_from = size)
+nm<-nm %>% remove_rownames %>% column_to_rownames(var="nombre") 
+nm[is.na(nm)] <- 0
+nm<-as.matrix(nm)
+
+BipartitoSBM <-  nm %>% 
+  estimateBipartiteSBM(model = 'poisson', 
+                       dimLabels = c('nombre', 'comuna'),
+                       estimOptions = list(verbosity = 3, plot = F))
+
+
+BipartitoSBM$storedModels 
+BipartitoSBM$storedModels %>%  ggplot() + aes(x = nbBlocks, y = ICL)  + geom_line() + geom_point(alpha = 0.5)
+plot(BipartitoSBM,   type = "data",  plotOptions = c(rowNames=T, colNames=T,layout=2),  vertex.label.cex=0.1)
+
+BipartitoSBM$memberships
+BipartitoSBM$rMemberships
+BipartitoSBM$nbDyads
+BipartitoSBM$nbBlocks
+BipartitoSBM$indMemberships
+BipartitoSBM$nbBlocks
+coef(BipartitoSBM, 'block')
+coef(BipartitoSBM, 'connectivity')
+
+
+
+colnames<-colnames(nm)
+rownames<-rownames(nm)
+
+
+
 
 
 # network
@@ -208,6 +262,12 @@ ggraph(g, layout = "kk") +
    geom_node_label(aes(label = name, filter=all_degree>=10), repel = TRUE, size = 2.5) +
 	 theme_graph(background="white") + 
     theme(legend.position = "none")
+
+
+
+
+
+
 
 
 
@@ -254,7 +314,7 @@ node_sizes%>%
 
 
 # 50 nombres más comunes por comuna. 
-result <- map(names_samples, ~count(.x, comuna, nombre))
+result <- map(names_filtered, ~count(.x, comuna, nombre))
 result <- bind_rows(result)
 result <- result %>% group_by(comuna, nombre) %>% summarize(quantity = sum(n))
 result <- result %>% arrange(comuna, desc(quantity))
@@ -300,28 +360,28 @@ result%>%
 
 
 # Customize the size of the nodes based on the frequency
-node_sizes <- result %>%
-  mutate(size = n/600) # Adjust the scaling factor as needed
-
-# Plot the network graph with differentiated node sizes
-graph <- ggplot() +
-  geom_node_point(aes(x = comuna, y = nombre, size = size, color = size), data = node_sizes) +
-  #scale_fill_viridis_c(guide = "legend") +
-  scale_color_viridis(option = "G",   direction = 1) +
-  scale_size_continuous(range = c(0, 6)) +
-  labs(x = "Commune", y = "Name") +
-  #theme_minimal() +
-  guides(size = "legend", colour = "legend") +
-  theme(axis.ticks.y=element_blank(),
-        #legend.position = "top",
-        panel.grid.major.y=element_blank(),
-        plot.title = element_text(hjust = 0.5, size = 8),
-        axis.title = element_text(size=10),
-        axis.text.x = element_text(size = 7,angle = 90, hjust = 1),
-        axis.text.y = element_text(size = 7))
-
-# Display the graph
-print(graph)
+#node_sizes <- result %>%
+#  mutate(size = quantity/600) # Adjust the scaling factor as needed
+#
+## Plot the network graph with differentiated node sizes
+#graph <- ggplot() +
+#  geom_node_point(aes(x = comuna, y = nombre, size = size, color = size), data = node_sizes) +
+#  #scale_fill_viridis_c(guide = "legend") +
+#  scale_color_viridis(option = "G",   direction = 1) +
+#  scale_size_continuous(range = c(0, 6)) +
+#  labs(x = "Commune", y = "Name") +
+#  #theme_minimal() +
+#  guides(size = "legend", colour = "legend") +
+#  theme(axis.ticks.y=element_blank(),
+#        #legend.position = "top",
+#        panel.grid.major.y=element_blank(),
+#        plot.title = element_text(hjust = 0.5, size = 8),
+#        axis.title = element_text(size=10),
+#        axis.text.x = element_text(size = 7,angle = 90, hjust = 1),
+#        axis.text.y = element_text(size = 7))
+#
+## Display the graph
+#print(graph)
 
 
 
