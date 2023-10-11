@@ -120,6 +120,12 @@ for (i in 2:length(names)) {
   nombres_nuevos_por_ano[i] <- length(setdiff(nombres_ano_actual, nombres_ano_anterior))
 }
 
+mean(nombres_nuevos_por_ano)
+# Calcular las diferencias
+diferencias <- diff(nombres_nuevos_por_ano)
+# Calcular la diferencia promedio
+diferencia_promedio <- mean(diferencias)
+
 #nombres_nuevos_por_ano
 # plot
 resultados <- data.frame(
