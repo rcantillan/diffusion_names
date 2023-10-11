@@ -98,6 +98,58 @@ In this study, we used two data sources. The first corresponds to the number of 
 \bigskip
 
 \begin{enumerate}
+  \item Descriptives: The descriptors are developed in two phases: first, we describe the data in its original state, that is, considering general distributions, for example, the number of new names per year within and between groups. Additionally, we look for patterns of stratification and segregation using the socioeconomic ranking imputed to each name. The latter can vary by year.
+\bigskip
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=13cm]{plot/new_names_yearII.png}
+    \caption{Number of new names per year in Chile (1920-2022)}
+    \label{}
+\end{figure}
+
+The previous graph considers all the data in a year, name, and commune format. The logic behind its construction is as follows: 1) we first get the unique names for each year (current year) and the previous year and get the difference. The results illustrate sustained growth with an average of 4380,088 new names per year and an average difference between years of 72.91.
+\bigskip
+
+Specifically, we construct an average annual socioeconomic level per commune. This was done by first calculating the average per household of Years of Education and Occupational Prestige, considering single-parent and two-parent households. After this, we calculate the annual median for the commune. These data were used to construct a socioeconomic index of the names, calculated considering the affiliation dyads per year of each name to each commune where it appears. Based on this structure, an average was calculated, weighted by the times the name appears in each commune by year. In this way, the index varies by year for each name. For the communes, there is variation considering only 6 sections in time that represent the population censuses of Chile (1960, 1970, 1982, 1992, 2002, 2017). Below, we can see the distribution of the measures at the community level.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=13cm]{plot/nivel_educ.png}
+    \caption{Distribution of educational years by commune for Chile  (1920-2022)}
+    \label{}
+\end{figure}
+
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=13cm]{plot/occup_prestige.png}
+    \caption{Distribution of occupational prestige by commune for Chile (1920-2022)}
+    \label{}
+\end{figure}
+
+
+Additionally, we constructed annual socioeconomic quartiles for the names. This results in sequences of states from 1960 to 2021. With this data, we can visualize and analyze the flows of names between "socioeconomic levels" and patterns in the sequences (for example, using typical clustering techniques to analyze sequences). Below, we illustrate how names move between quartiles 4 and 1 over the years with flow maps.
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=13cm]{plot/flow_nivel_educ.png}
+    \caption{The flow of names between educational groups}
+    \label{}
+\end{figure}
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=13cm]{plot/flow_occup_prestige.png}
+    \caption{The flow of names between occupational prestige groups}
+    \label{}
+\end{figure}
+
+
+
   \item Projection of valued bipartite matrices
 
 Bipartite or two-mode networks (or multimodal networks) \parencite{knoke_multimodal_2021} involve two groups of entities and the relationships between them. Typically, the two-mode data structure involves relationships between entities, not within each entity type. When the data structure involves relationships "between" and "within" entities, this data structure is known as a \parencite{lazega_multilevel_2016} multilevel network. With our data, an entity can only connect to another of the same type using common links with the other kind of entity. For example, one way to think about the connectivity of an organizational field is through the multiple affiliations of actors \parencite{moody_structural_2003}.
@@ -117,23 +169,20 @@ The previously obtained network in a weighted (or valued) way can be represented
 Serrano's approach, the "disparity filter" involves comparing the weights of the links with their expected values under a null model that considers the local community of each node. We used the backbone package for R (v2.1.1; Neal, 2022) to extract the unweighted backbone of a weighted and undirected unipartite network \parencite{neal_comparing_2021,serrano_extracting_2009}.
  \bigskip
  
-  \item Descriptives
 
-The descriptors are developed in two phases: first, we describe the data in its original state, that is, considering general distributions, for example, the number of new names per year within and between groups. Additionally, we look for patterns of stratification and segregation using the socioeconomic ranking imputed to each name. The latter can vary by year.
-\bigskip
-
-Additionally, we build simple network statistics, which contribute to making a picture of the topology of the networks built per year (or groups of years). Specifically, we calculated the size, the number of observed links, density, diameter, number of isolates, centralization, local and global transitivity, average degree, the standard deviation of degree, and average PageRank \parencite{brin_anatomy_1998}. Additionally, we search for cluster numbers and calculate modularity following the "info map" procedure. This algorithm detects network clusters based on random walks. The intuition is that a random walker is more likely to wander through the same community than travel to a different one. The "info map" algorithm considers an infinite random walk, which tends to go around one community until it passes to another; this method seeks to balance the number of communities and the number of unique identifiers in each community so that the path of the random walker can be recorded in the most accurate way \parencite{rosvall_maps_2008}. 
+We build simple network statistics, which contribute to making a picture of the topology of the networks built per year (or groups of years). Specifically, we calculated the size, the number of observed links, density, diameter, number of isolates, centralization, local and global transitivity, average degree, the standard deviation of degree, and average PageRank \parencite{brin_anatomy_1998}. Additionally, we search for cluster numbers and calculate modularity following the "info map" procedure. This algorithm detects network clusters based on random walks. The intuition is that a random walker is more likely to wander through the same community than travel to a different one. The "info map" algorithm considers an infinite random walk, which tends to go around one community until it passes to another; this method seeks to balance the number of communities and the number of unique identifiers in each community so that the path of the random walker can be recorded in the most accurate way \parencite{rosvall_maps_2008}. 
   
-\end{enumerate}
-
-
-\section{Preliminary results}
-
+A continuadción mostramos los resultados de las redes construidas para todas las décadas, considerando una muestra del 10 \% de los datos completos. 
+ \bigskip
 
 
 \begin{sidewaystable}
     \centering
     \caption{Networks descriptives by decade}
+      \small
+  \renewcommand{\arraystretch}{1.2}
+  \renewcommand{\tabcolsep}{0.1cm}
+%\begin{tabular}{l*{10}{c}} 
 \begin{tabular}{rrrrrrrrrrrrrr}
   \hline
  & size & edges & density & infomap\_n & modular & centraIg & g\_trans & l\_trans & DegreeAv & StdDegree & mpagerank & diameter & isolate \\ 
@@ -158,23 +207,13 @@ Additionally, we build simple network statistics, which contribute to making a p
 
 
 
+\item Bipartite Stochastic block models
 
+Another analysis approach corresponds to the Stochastic Block Models for mode 2 networks. The Bipartite SBM models this network structure as a joint distribution of two adjacency matrices. These adjacency matrices are parameterized by a set of stochastic blocks, where each block represents the probability of connection between groups of nodes. The central idea of Bipartite SBM is that the likelihood of a connection between two nodes depends on the groups to which those nodes belong. Therefore, the model assumes that the links are not independent but are influenced by the nodes' membership in certain groups. The objective of the Bipartite SBM is to estimate the model's parameters, that is, the connection probabilities between the different groups of nodes, from the observed data of the bipartite network.
 
+For illustrative purposes, we filter the complete data for all years (1920-2021) to consider the top 100 for all communes and adjust the scale of the tie intensity (or quantity). This way, I analyze a mode 2 network with 84 names and 38 communes, totaling 3071 dyads. The best-fitting model considers a structure of 5 blocks of communes and 4 blocks of names. The importance of Santiago and its communes concerning the rest is relevant. It seems that this line of analysis can also be carried out by decade, considering that there are extensions to do this with a longitudinal structure. In any case, we must do this considering a top of names and communes representing the flows.
 
-
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=13cm]{plot/new_names_yearII.png}
-    \caption{Number of new names per year in Chile (1920-2022)}
-    \label{}
-\end{figure}
-
-
-El gráfico anterior considers todos los datos en formato año, nombre, comuna. La lógica detrás de su construcción es la siguiente:  1) primero obtenemos lo snombres únicos para cada año (año actual) y del año anterior, y obtenemos la diferencia. Los resultados ilustran una 
-un crecimiento sostenido con una media de 4380.088 nombres nuevos por año y una diferencia promedio entre años de 72.91. 
-
-
+Below, we illustrate with a graph:
 
 \begin{figure}[H]
     \centering
@@ -186,26 +225,31 @@ un crecimiento sostenido con una media de 4380.088 nombres nuevos por año y una
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=13cm]{plot/names_commune_network.png}
-    \caption{top names per commune in Chile (1920-2022)}
+    \includegraphics[width=10cm]{plot/blocks.png}
+    \caption{Blocks top 100 names}
     \label{}
 \end{figure}
 
+\end{enumerate}
 
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=13cm]{plot/top_nombre_comuna1.png}
-    \caption{top names per commune in Chile (1920-2022)}
-    \label{}
-\end{figure}
+\section{Preguntas}
+
+\begin{enumerate}
+    \item Contagion: If we have an annual socioeconomic level for each name, we can ask ourselves how much of the average socioeconomic status of the names per year depends on the shared (average) socioeconomic level with other names. The shared status can be calculated by considering the strength of the communal co-presence of names i and j in a given period and the socioeconomic level of each name. This shared status would vary by name and year. Given the endogenous nature of this relationship, it must be instrumented, and this is a challenge since it implies constructing more variables for the names. In any case, the assumption would be that the linked attributes do not influence the socioeconomic level of the names but rather indirectly through the shared socioeconomic status or other characteristics of the names. 
+
+    \item Dyadic analysis mode 1 (name-name): Here, we can model the strength of the intensity of the links between names. The questions could point towards analyzing the factors that influence the power of the ties. For example, it would be interesting to evaluate the effect of spatial proximity and the compositional effect (of communal contexts). Similarity and structural issues (such as triadic closure) would be the most influential factors for networks. 
+    
+\end{enumerate}
 
 
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=13cm]{plot/top_nombre_comuna2.png}
-    \caption{top names per commune in Chile (1920-2022)}
-    \label{}
-\end{figure}
+
+
+
+
+
+
+
+
 
 
 
