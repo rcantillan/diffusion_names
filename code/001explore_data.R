@@ -1,4 +1,5 @@
 
+# Librerías
 library(ipumsr)
 library(readr)
 library(tidyr)
@@ -14,17 +15,44 @@ library(graphlayouts)
 library(stringdist)
 library(bipartite)
 library(ggpubr)
+library(tidyverse)
+library(RPostgres)
 
-# setwd
-setwd("/home/rober/Documents/proyecto_nombres/wetransfer_ak002t0025787_2023-04-18_1401/AK002T0025787/Anexo_Respuesta_AK002T0025787")
-Sys.setlocale( 'LC_ALL','C' ) 
-names<-read_delim("datos_1920a2021.txt", delim = ";", locale=locale(encoding="latin1")) 
+## Conectar con servidor
+
+con <- dbConnect(
+  Postgres(),
+  user = "fondecyt",
+  password = "9nvGYZ35nUdBTSbVhpmp", #borrar
+  dbname = "fondecyt",
+  host = "64.227.106.47"
+  #port = 5432 # no es necesario, a menos que sea un puerto no estandar
+)
+
+## consulta al servidor
+names<-tbl(con, "names_chile") %>% collect() %>% glimpse()
 
 # separate year/month column 
 colnames(names)<-c("ano","comuna","nombre","cantidad")
 names<-separate(names, ano, into = c("ano","mes"), sep = c(4))
 names$comuna = stri_trans_general(str = names$comuna, id = "Latin-ASCII")
 names$nombre = stri_trans_general(str = names$nombre, id = "Latin-ASCII")
+
+glimpse(names)
+
+
+## setwd
+#setwd("/home/rober/Documents/proyecto_nombres/wetransfer_ak002t0025787_2023-04-18_1401/AK002T0025787/Anexo_Respuesta_AK002T0025787")
+#Sys.setlocale( 'LC_ALL','C' ) 
+#names<-read_delim("datos_1920a2021.txt", delim = ";", locale=locale(encoding="latin1")) 
+
+## Subir datos al servidor 
+#dbListTables(con)
+#dbWriteTable(con, "names_chile", names, overwrite = T)
+
+# borrar tablas
+#dbRemoveTable(con,"names_chile")
+
 
 # crear data agrupada por año y quitar 2.5 superior e inferior de acuerdo da la distribución de cantidad agrupada por año. 
 ## sumar cantidad de nombres por año. 
@@ -231,7 +259,6 @@ BipartitoSBM$rMemberships
 BipartitoSBM$nbDyads
 BipartitoSBM$nbBlocks
 BipartitoSBM$indMemberships
-BipartitoSBM$nbBlocks
 coef(BipartitoSBM, 'block')
 coef(BipartitoSBM, 'connectivity')
 
