@@ -69,8 +69,6 @@ names_dist %>%
 arrange(desc(cantidad_total))
 
 
-
-
 # filtrar datos  ---------------------------------------------------------------
 # Crear un nuevo data frame con los percentiles 2.5 y 97.5
 #names_filtered <- names_dist %>%
@@ -346,8 +344,30 @@ node_sizes%>%
 
 
 
+
+
+
+glimpse(names)
+names_ano <- names %>% 
+  group_by(ano, comuna, nombre) %>%
+  summarise(cantidad=sum(cantidad)) %>% 
+  group_by(ano, comuna) %>% 
+  top_n(20, cantidad) %>% 
+  select(ano, comuna, nombre, cantidad)
+
+
+names_ano %>%
+ # ungroup() %>%
+  group_by(ano, nombre) %>%
+  summarize(cantidad = sum(cantidad)) %>%
+  ggplot(aes(x = ano, y = cantidad, fill = nombre)) + 
+  geom_col(position = "dodge")
+
+
+
+
 # 50 nombres más comunes por comuna. 
-result <- map(names_filtered, ~count(.x, comuna, nombre))
+result <- map(names, ~count(.x, comuna, nombre))
 result <- bind_rows(result)
 result <- result %>% group_by(comuna, nombre) %>% summarize(quantity = sum(n))
 result <- result %>% arrange(comuna, desc(quantity))

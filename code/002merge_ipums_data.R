@@ -31,43 +31,57 @@ names$comuna = stri_trans_general(str = names$comuna, id = "Latin-ASCII")
 names$nombre = stri_trans_general(str = names$nombre, id = "Latin-ASCII")
 
 ## sample subset (stratified by "ano", "comuna") 
-strata <- names %>%
-  group_by(ano, comuna) %>%
-  summarize(count = n()) %>%
-  ungroup()
-
-strata <- strata %>%
-  mutate(sample_size = ceiling(0.1 * count))  
-
-names_sample <- names %>%
-  inner_join(strata, by = c("ano", "comuna")) %>%
-  group_by(ano, comuna) %>%
-  sample_n(size = first(sample_size))  # Usamos first() para obtener el tamaño de muestra del primer registro en cada estrato
-
-
-## sumar cantidad de nombres por año. 
-names_sample <- names_sample %>%
-  group_by(ano, comuna, nombre) %>%
-  summarize(cantidad = sum(cantidad))
+#strata <- names %>%
+#  group_by(ano, comuna) %>%
+#  summarize(count = n()) %>%
+#  ungroup()
+#
+#strata <- strata %>%
+#  mutate(sample_size = ceiling(0.1 * count))  
+#
+#names_sample <- names %>%
+#  inner_join(strata, by = c("ano", "comuna")) %>%
+#  group_by(ano, comuna) %>%
+#  sample_n(size = first(sample_size))  # Usamos first() para obtener el tamaño de muestra del primer registro en cada estrato
+#
+#
+### sumar cantidad de nombres por año. 
+#names_sample <- names_sample %>%
+#  group_by(ano, comuna, nombre) %>%
+#  summarize(cantidad = sum(cantidad))
 
 
 
 # IPUMS data -------------------------------------------------------------------
 ipums <- read_dta("~/Documents/proyecto_nombres/ipumsi_00005.dta")
 
+con <- dbConnect(
+  Postgres(),
+  user = "fondecyt",
+  password = "9nvGYZ35nUdBTSbVhpmp", #borrar
+  dbname = "fondecyt",
+  host = "64.227.106.47"
+  #port = 5432 # no es necesario, a menos que sea un puerto no estandar
+)
+
+## Subir datos al servidor 
+dbListTables(con)
+#dbWriteTable(con, "ipums_chile", ipums, overwrite = T)
+ipums <- tbl(con, "ipums_chile") %>% collect() %>% glimpse()
+#ipums <- read_dta("~/Documents/proyecto_nombres/ipumsi_00006.dta")
+
 ## merge 
 ## with `GEO2_CL` (1960:1970), `GEO2_CL1960`, `GEO2_CL1970`, `GEO2_CL1982`, `GEO2_CL1992`, `GEO2_CL2002`, `GEO2_CL2017`
-
-## Create a file of equivalences for communes by decades
+## Create a file of equivalences for communes by decadeshttp://127.0.0.1:20211/graphics/ac03a1de-455c-4d8d-b357-1b9e8fbb894c.png
 ## 1- Create a tab by a decade of communes and codes.
 ## 2- Combine codes with name data.
 ## 3- Merge of sociodemographic variables by year 
 
 
 ## obtener labels (nombres) de los códigos comunales para el año 1970. 
-freq(ipums$geo2_cl1970)
-id_freq<-freq(ipums$geo2_cl1970)
-id_freq <- tibble::rownames_to_column(id_freq, "id")
+#freq(ipums$geo2_cl1970)
+#id_freq<-freq(ipums$geo2_cl1970)
+#id_freq <- tibble::rownames_to_column(id_freq, "id")
 
 ## create label key data. 
 ## 1960
@@ -136,7 +150,7 @@ id_comunas_ipums$name <- toupper(id_comunas_ipums$name)
 # Yo aplicaría métodos de community detection solo cuando tengamos esta red menos densa. 
 # En relación con esto, sería bueno tener una idea de cómo se distribuyen los nombres en el tiempo (por ej., por década), especialmente la cantidad de nombres nuevos que aparecen en el tiempo.
 
-glimpse(ipums)
+#glimpse(ipums)
 
 
 # Socio economic variables -----------------------------------------------------
@@ -271,7 +285,7 @@ gse_comunas$ano<-as.character(gse_comunas$ano)
 names_sample_p <- left_join(names, gse_comunas, by = c("comuna", "ano"))
 
 ## Convertir las columnas "comuna" y "ano" a caracteres en ambos data frames
-names_sample <- names_sample %>% mutate(comuna = as.character(comuna), ano = as.character(ano))
+names <- names %>% mutate(comuna = as.character(comuna), ano = as.character(ano))
 gse_comunas <- gse_comunas %>% mutate(comuna = as.character(comuna), ano = as.character(ano))
 
 ## Repetir valores para "median_prom_isei" y "median_prom_school"
@@ -346,11 +360,8 @@ names_prom %>%
   theme(legend.position = "bottom") +
   ggtitle("The flow of names between socioeconomic groups")
 
-
-
-
-
-
+# difusión de nombres ----------------------------------------------------------
+# comuna data panel 
 
 
 
