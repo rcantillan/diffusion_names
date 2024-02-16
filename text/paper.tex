@@ -242,6 +242,56 @@ Below, we illustrate with a graph:
 \end{enumerate}
 
 
+\section{Names diffusion}
+
+En el trabajo de Bail, et al. \parencite*{bail_prestige_2019}, los autores recolectaron los 10 términos de búsqueda más populares y los 10 términos con mayor crecimiento en popularidad cada mes entre 2004 y 2014 para 199 países, usando datos de Google Trends (tendencias de búsqueda de Google). Esto resultó en una base de datos mensual que describe el comportamiento de búsqueda de individuos en 199 países durante este período. Para estudiar la difusión de términos de búsqueda entre países a través del tiempo, los autores construyeron un panel de datos con la siguiente structure:
+
+\begin{enumerate}
+\item La unidad de análisis es el par ordenado país A → país B en un año calendario determinado.
+\item La variable de resultado es el recuento del número de términos de búsqueda que primero aparecieron en el conjunto de búsquedas más populares del país A y posteriormente en el país B dentro del mismo año calendario. Si un término apareció en A y luego en B en el mismo año, se contó como un caso de difusión en la dirección A→B.
+\item El conjunto de datos resultante es un panel diádico-temporal con el país A, el país B, el año y el recuento de difusión como variables.
+\end{enumerate}
+
+Para emular la estrategia en el contexto Chileno usando datos de nombres entre comunas:
+
+\begin{enumerate}
+    \item La unidad de análisis sería el par ordenado comuna A → comuna B por cada año.
+    \item La variable de resultado sería el conteo de nombres que primero aparecen en la comuna A y luego en la comuna B dentro del mismo año o el siguiente. Representando la difusión direccional de nombres.
+    \item Las variables en el panel resultante serían la comuna A, la comuna B, el año y el conteo de difusión para cada par comunal por año.
+\end{enumerate}
+
+Para estudiar el fenómeno de la difusión de nombres entre comunas en Chile, construimos un conjunto de datos con estructura de panel dyádico que captura las relaciones direccionales en el tiempo entre pares de comunas. Específicamente, generamos todas las posibles diadas direccionales comuna A → comuna B para cada año entre 1920 y 2020, con A y B representando distintas comunas.
+\bigskip
+
+La variable de resultado en este conjunto de datos es el recuento anual de nombres que primero aparecen en una comuna A en un año dado, y posteriormente en una comuna B diferente dentro del siguiente año calendario. Este recuento indica entonces casos donde potencialmente ocurrió una difusión del uso de ciertos nombres desde residencias originales en una comuna, hacia residencias posteriores en nuevas comunas al siguiente año. Si bien no podemos confirmar que los nuevos casos del nombre en la comuna B se deban exclusivamente a un proceso de difusión desde A, la estructura direccional de los datos permite aproximar mediciones sobre tales patrones espacio-temporales de difusión de nombres entre comunas en Chile
+
+
+
+
+\section{Nuevos descriptivos}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
