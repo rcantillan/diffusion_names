@@ -30,28 +30,6 @@ names<-separate(names, ano, into = c("ano","mes"), sep = c(4))
 names$comuna = stri_trans_general(str = names$comuna, id = "Latin-ASCII")
 names$nombre = stri_trans_general(str = names$nombre, id = "Latin-ASCII")
 
-## sample subset (stratified by "ano", "comuna") 
-#strata <- names %>%
-#  group_by(ano, comuna) %>%
-#  summarize(count = n()) %>%
-#  ungroup()
-#
-#strata <- strata %>%
-#  mutate(sample_size = ceiling(0.1 * count))  
-#
-#names_sample <- names %>%
-#  inner_join(strata, by = c("ano", "comuna")) %>%
-#  group_by(ano, comuna) %>%
-#  sample_n(size = first(sample_size))  # Usamos first() para obtener el tamaño de muestra del primer registro en cada estrato
-#
-#
-### sumar cantidad de nombres por año. 
-#names_sample <- names_sample %>%
-#  group_by(ano, comuna, nombre) %>%
-#  summarize(cantidad = sum(cantidad))
-
-
-
 # IPUMS data -------------------------------------------------------------------
 ipums <- read_dta("~/Documents/proyecto_nombres/ipumsi_00005.dta")
 
@@ -204,6 +182,7 @@ geo_vars <- grep("geo2_cl", colnames(ipums), value = TRUE)
 ipums <- ipums %>%
   unite("id_comuna", all_of(geo_vars), sep = "|", na.rm = TRUE) %>%
   mutate(id_comuna = as.numeric(str_extract(id_comuna, "\\d+"))) 
+
 
 ## Función para calcular el promedio y manejar NAs
 promedio_con_na <- function(x, y) {
