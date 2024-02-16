@@ -349,7 +349,8 @@ names_gse %>%
   scale_colour_manual(values = mypal_disc)
 
 
-top50 <- names_gse %>%  
+
+ ntop50 <- names_gse %>%  
   filter(!is.na(quintil_weighted_isei)) %>% 
   group_by(ano, quintil_weighted_isei, nombre) %>%
   summarise(cantidad = sum(cantidad)) %>% 
@@ -378,8 +379,7 @@ g <- names_gse %>%
   filter(cantidad_pais >= 20) %>%
   ungroup() %>%
   group_by(ano) %>%
-  mutate(q = rank(cantidad_pais)/max(rank(cantidad_pais))) %>% 
-  filter(ano == 1970 & q <= 0.1) 
+  mutate(q = rank(cantidad_pais)/max(rank(cantidad_pais))) 
 #glimpse(g)
 
 
@@ -440,20 +440,19 @@ c1 %>%
 
 
 
-
-
 # Asegurarse de que 'ano' sea de tipo numérico
 g1$ano <- as.numeric(g1$ano)
-
-ggplot(subset(g1, q <= 0.1), aes(x = factor(ano), fill=factor(quintil_weighted_isei))) +
+ggplot(subset(g, q >= 0.1), aes(x = factor(ano), fill=factor(quintil_weighted_isei))) +
   geom_bar(stat = "count") + 
   scale_fill_viridis_d() +
   facet_wrap(~quintil_weighted_isei) +
-  theme_bw() + 
-  labs(title="Nombres poco populares por decada y quintil socioeconomico (q <= 0.1)",
+  labs(title="Nombres poco populares a nivel país por decada y quintil\nsocioeconomico (q >= 0.1)",
        x="Ano",
        y="Cantidad",
-       fill = "Quintil (ISEI)")
+       fill = "Quintil (ISEI)") +
+  scale_colour_manual(values = mypal_disc)
+  
+
 
 
 
@@ -486,7 +485,6 @@ ggplot(datos_interes, aes(x = ano, y = q, color = nombre)) +
 
 
 # 2 densidad
-
 # Filtrar los datos para los años de interés y los quintiles
 datos_interes <- g1 %>%
   filter(ano %in% c("1960", "1970", "1982", "1992", "2002", "2017"),
@@ -643,6 +641,22 @@ mq4 <- netmem::edgelist_to_matrix(cbind(top_nombre_q4$nombre,top_nombre_q4$ano),
 mq5 <- netmem::edgelist_to_matrix(cbind(top_nombre_q5$nombre,top_nombre_q5$ano), bipartite = T)
 #glimpse(mq1)
 
+# Dataframe de la matriz
+df_seq_1 <- as.data.frame(mq5) %>% rownames_to_column("name")
+df_seq_2 <- as.data.frame(mq5) %>% rownames_to_column("name")
+df_seq_3 <- as.data.frame(mq5) %>% rownames_to_column("name")
+df_seq_4 <- as.data.frame(mq5) %>% rownames_to_column("name")
+df_seq_5 <- as.data.frame(mq5) %>% rownames_to_column("name")
+
+
+# Secuencias con name como id
+seqs_1 <- seqdef(df_seq_1[-1], var = names(df_seq_1[-1]), states = c("0","1"), id = df_seq_1$name)
+seqs_2 <- seqdef(df_seq_2[-1], var = names(df_seq_2[-1]), states = c("0","1"), id = df_seq_2$name)
+seqs_3 <- seqdef(df_seq_3[-1], var = names(df_seq_3[-1]), states = c("0","1"), id = df_seq_3$name)
+seqs_4 <- seqdef(df_seq_4[-1], var = names(df_seq_4[-1]), states = c("0","1"), id = df_seq_4$name)
+seqs_5 <- seqdef(df_seq_5[-1], var = names(df_seq_5[-1]), states = c("0","1"), id = df_seq_5$name)
+
+
 
 # Dataframe de la matriz
 df_seq <- as.data.frame(mq5) %>%
@@ -685,7 +699,7 @@ print(p5)
 
 
 
-
+glimpse(g1)
 
 
 
@@ -723,7 +737,7 @@ promedio_por_cuartil <- datos_interes %>%
 ggplot(promedio_por_cuartil, aes(x = ano, y = promedio_popularidad, color = factor(quintil_weighted_isei))) +
   geom_line(aes(group = factor(quintil_weighted_isei))) +  
   geom_point(size=2) +
-  labs(title = "Promedio de popularidad de nombres seleccionados por quintil a lo largo del tiempo \n(Mas populares en el quintil 5 en el ano 1960)",
+  labs(title = "Nombres mas populares en el quintil 5 en el ano 1960",
        x = "Ano",
        y = "Promedio de popularidad",
        color = "Quintil\nSocioeconomico") +
@@ -756,7 +770,7 @@ promedio_por_quintil_1970 <- datos_interes_1970 %>%
 ggplot(promedio_por_quintil_1970, aes(x = ano, y = promedio_popularidad, color = factor(quintil_weighted_isei))) +
   geom_line(aes(group = factor(quintil_weighted_isei))) +  # Agregar línea que conecta los puntos por grupo
   geom_point() +
-  labs(title = "Promedio de popularidad de nombres seleccionados por quintil a lo largo del tiempo \n(Más populares en el quintil 5 en el año 1970)",
+  labs(title = "Nombres mas populares en el quintil 5 en el ano 1970",
        x = "Año",
        y = "Promedio de popularidad",
        color = "Quintil\nSocioeconómico") +
@@ -766,7 +780,7 @@ ggplot(promedio_por_quintil_1970, aes(x = ano, y = promedio_popularidad, color =
 
 # Filtrar los datos para incluir solo el año 1982 y el quintil más alto
 datos_1982 <- g1 %>%
-  filter(ano == "1982", quintil_weighted_isei == 5)
+  filter(ano == 1982, quintil_weighted_isei == 5)
 
 # Ordenar los datos por popularidad en orden descendente y seleccionar los nombres más populares
 nombres_populares_1982 <- datos_1982 %>%
@@ -789,7 +803,7 @@ promedio_por_quintil_1982 <- datos_interes_1982 %>%
 ggplot(promedio_por_quintil_1982, aes(x = ano, y = promedio_popularidad, color = factor(quintil_weighted_isei))) +
   geom_line(aes(group = factor(quintil_weighted_isei))) +  # Agregar línea que conecta los puntos por grupo
   geom_point() +
-  labs(title = "Promedio de popularidad de nombres seleccionados por quintil a lo largo del tiempo \n(Mas populares en el quintil 5 en el ano 1982)",
+  labs(title = "Nombres mas populares en el quintil 5 en el ano 1982",
        x = "Ano",
        y = "Promedio de popularidad",
        color = "Quintil\nSocioeconomico")  +
@@ -800,7 +814,7 @@ ggplot(promedio_por_quintil_1982, aes(x = ano, y = promedio_popularidad, color =
 
 # Filtrar los datos para incluir solo el año 1992 y el quintil más alto
 datos_1992 <- g1 %>%
-  filter(ano == "1992", quintil_weighted_isei == 5)
+  filter(ano == 1992, quintil_weighted_isei == 5)
 
 # Ordenar los datos por popularidad en orden descendente y seleccionar los nombres más populares
 nombres_populares_1992 <- datos_1992 %>%
@@ -823,17 +837,17 @@ promedio_por_quintil_1992 <- datos_interes_1992 %>%
 ggplot(promedio_por_quintil_1992, aes(x = ano, y = promedio_popularidad, color = factor(quintil_weighted_isei))) +
   geom_line(aes(group = factor(quintil_weighted_isei))) +  # Agregar línea que conecta los puntos por grupo
   geom_point() +
-  labs(title = "Promedio de popularidad de nombres seleccionados por quintil a lo largo del tiempo \n(Más populares en el quintil 5 en el año 1992)",
+  labs(title = "Nombres mas populares en el quintil 5 en el ano 1992",
        x = "Año",
        y = "Promedio de popularidad",
        color = "Quintil\nSocioeconómico")  +
   scale_colour_manual(values = mypal_disc)
 
-## from 2022 ------------------------------------------------------------
+## from 2002 ------------------------------------------------------------
 
 # Filtrar los datos para incluir solo el año 2002 y el quintil más alto
 datos_2002 <- g1 %>%
-  filter(ano == "2002", quintil_weighted_isei == 5)
+  filter(ano == 2002, quintil_weighted_isei == 5)
 
 # Ordenar los datos por popularidad en orden descendente y seleccionar los nombres más populares
 nombres_populares_2002 <- datos_2002 %>%
@@ -856,7 +870,7 @@ promedio_por_quintil_2002 <- datos_interes_2002 %>%
 ggplot(promedio_por_quintil_2002, aes(x = ano, y = promedio_popularidad, color = factor(quintil_weighted_isei))) +
   geom_line(aes(group = factor(quintil_weighted_isei))) +  # Agregar línea que conecta los puntos por grupo
   geom_point() +
-  labs(title = "Promedio de popularidad de nombres seleccionados por quintil a lo largo del tiempo \n(Más populares en el quintil 5 en el año 2002)",
+  labs(title = "Nombres mas populares en el quintil 5 en el ano 2002",
        x = "Año",
        y = "Promedio de popularidad",
        color = "Quintil\nSocioeconómico")  +
