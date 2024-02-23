@@ -18,6 +18,7 @@ library(ggpubr)
 library(tidyverse)
 library(RPostgres)
 library(ggalluvial)
+library(TraMineR)
 
 # Set preferences ggplot theme
 
@@ -138,30 +139,15 @@ for (i in 1921:2022) {
 }
 
 #raros_hist %>% filter(ano==2020) %>% arrange(desc(acum))
+# Antes de 1980 (si estamos en 1980), si ha aparecido menos de 10 veces por año. 
+# 
 
-
-#### Nombre nuevo respecto 
-
-raros_hist <- data.frame()
-
-for (i in 1921:2022) {
-  cat("========= ",i," =========")
-  hist <- names %>% filter(ano < i) 
-  
-  raros <- hist %>% group_by(nombre) %>%
-    summarise(acum = sum(cantidad)) %>%
-    mutate(ano=i, raro=1) %>%
-    filter(acum<=(i-1920)*10) 
-  
-  raros_hist <- rbind(raros_hist,raros)
-}
 
 #raros_hist %>% filter(ano==2020) %>% arrange(desc(acum))
 
 
 #### nombre reciclado 
-
-start_year <- 1960 
+start_year <- 1955 
 end_year <- 2022
 gap_years <- 30
 
@@ -307,10 +293,44 @@ names$ano <- as.numeric(names$ano)
 gse_comunas$ano <- as.numeric(gse_comunas$ano)
 
 # merge
-names_gse <- left_join(names, gse_comunas, by = c("comuna", "ano")) %>% 
-  ungroup() %>%
-  filter(ano %in% c("1960", "1970", "1982", "1992", "2002", "2017"))
+names_gse <- left_join(names, gse_comunas, by = c("comuna", "ano"))
+names_gse <- names_gse %>% filter(ano >= 1955)
+
+#names_gse <- left_join(names, gse_comunas, by = c("comuna", "ano")) %>% 
+#  ungroup() %>%
+#  filter(ano %in% c("1960", "1970", "1982", "1992", "2002", "2017"))
 #glimpse(names_gse)
+
+
+# extender datos para 5 años anterior y 5 posteriores. 
+
+glimpse(names_gse)
+
+census_years <- c(1960, 1970, 1982, 1992, 2002, 2017)
+
+names_gse <- names_gse %>% 
+  mutate(census_year = case_when(
+    ano %in% (1955:1965) ~ 1960,  
+    ano %in% (1966:1976) ~ 1970,
+    ano %in% (1977:1987) ~ 1982, 
+    ano %in% (1988:1998) ~ 1992,
+    ano %in% (1999:2009) ~ 2002,
+    ano %in% (2010:2022) ~ 2017
+  ))
+
+names_gse <- names_gse %>%
+  group_by(comuna, census_year) %>%
+  mutate(
+    median_prom_isei = ifelse(is.na(median_prom_isei), 
+                              median(median_prom_isei, na.rm = TRUE), 
+                              median_prom_isei),
+    median_prom_school  = ifelse(is.na(median_prom_school),
+                                 median(median_prom_school, na.rm = TRUE),  
+                                 median_prom_school)
+  ) %>%
+  select(-census_year)
+
+
 
 # Ranking quantiles ------------------------------------------------------------
 
@@ -341,16 +361,67 @@ names_gse <- names_gse %>% mutate(tipo_nombre = case_when(raro==1 ~ "nuevo",
 
 #glimpse(names_gse)
 
+# nombres nuevos 
+names_gse %>% 
+  filter(!is.na(quintil_weighted_isei)) %>% 
+  filter(tipo_nombre == "nuevo") %>%
+  ggplot(aes(x = ano, y = cantidad, fill = tipo_nombre)) +
+  scale_x_continuous(breaks = c(1955, 1980, 2000, 2020)) + 
+  geom_bar(stat = "identity") +
+  facet_wrap(~quintil_weighted_isei)  +
+  scale_colour_manual(values = mypal_disc) +
+  labs(title = "New names by año and Social Class (quintil)",
+       x = "",
+       y = "Freq.") +
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.4)) +
+  guides(fill=FALSE)
+
+
+
+names_gse %>% 
+  filter(!is.na(quintil_weighted_isei)) %>% 
+  filter(tipo_nombre == "nuevo") %>%
+  ggplot(aes(x = ano, y = cantidad, fill = tipo_nombre)) +
+  scale_x_continuous(breaks = c(1955, 1980, 2000, 2020)) + 
+  geom_bar(stat = "identity", color = "#FF6666", width = 0.1) +  # Ajustamos el color y el tamaño de la línea
+  facet_wrap(~quintil_weighted_isei)  +
+  scale_fill_manual(values = mypal_disc) +
+  labs(title = "New names by year and Social Class (quintile)",
+       x = "",
+       y = "Freq.") +
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.4)) +
+  guides(fill=FALSE)
+
+
+
+
+
+# nombres reciclados
+names_gse %>% 
+  filter(!is.na(quintil_weighted_isei)) %>% 
+  filter(tipo_nombre == "reciclado") %>%
+  ggplot(aes(x = ano, y = cantidad, fill = tipo_nombre)) +
+  geom_bar(stat="identity", color = "#FF6666", width = 0.1) + 
+  facet_wrap(~quintil_weighted_isei)  +
+  scale_colour_manual(values = mypal_disc) +
+  labs(title = "Recicled names by year and Social Class (quintile)",
+       x = "",
+       y = "Freq.") +
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.4)) +
+  guides(fill=FALSE)
+
+
 names_gse %>% 
   filter(!is.na(quintil_weighted_isei)) %>% 
   ggplot(aes(x = ano, y = cantidad, fill = tipo_nombre)) +
   geom_bar(position="fill", stat="identity") + 
   facet_wrap(~quintil_weighted_isei)  +
-  scale_colour_manual(values = mypal_disc)
+  scale_colour_manual(values = mypal_disc) 
 
 
 
- ntop50 <- names_gse %>%  
+
+ top50 <- names_gse %>%  
   filter(!is.na(quintil_weighted_isei)) %>% 
   group_by(ano, quintil_weighted_isei, nombre) %>%
   summarise(cantidad = sum(cantidad)) %>% 
@@ -442,7 +513,7 @@ c1 %>%
 
 # Asegurarse de que 'ano' sea de tipo numérico
 g1$ano <- as.numeric(g1$ano)
-ggplot(subset(g, q >= 0.1), aes(x = factor(ano), fill=factor(quintil_weighted_isei))) +
+ggplot(subset(g, q <= 0.1), aes(x = factor(ano), fill=factor(quintil_weighted_isei))) +
   geom_bar(stat = "count") + 
   scale_fill_viridis_d() +
   facet_wrap(~quintil_weighted_isei) +
@@ -459,7 +530,7 @@ ggplot(subset(g, q >= 0.1), aes(x = factor(ano), fill=factor(quintil_weighted_is
 # Difusión ----------------------------------------------------------------------
 # Paso 1: Filtrar los datos para los nombres más populares en el año 1960 en el quintil 5
 nombres_populares_1960 <- g1 %>%
-  filter(ano == 1960 & quintil_weighted_isei == 5) %>%
+  filter(ano == 1955 & quintil_weighted_isei == 5) %>%
   group_by(nombre) %>%
   summarise(popularidad = sum(q, na.rm = TRUE)) %>%
   arrange(desc(popularidad)) %>%
@@ -467,8 +538,8 @@ nombres_populares_1960 <- g1 %>%
 
 # Paso 2: Filtrar los datos para estos nombres y los años posteriores en todos los quintiles
 datos_interes <- g1 %>%
-  semi_join(nombres_populares_1960, by = "nombre") %>%
-  filter(ano %in% c("1970", "1982", "1992", "2002", "2017"))
+  semi_join(nombres_populares_1960, by = "nombre") 
+  #filter(ano %in% c("1970", "1982", "1992", "2002", "2017"))
 
 # Visualizar la trayectoria de popularidad dentro de cada quintil para cada año, separado por quintil
 ggplot(datos_interes, aes(x = ano, y = q, color = nombre)) +
@@ -523,7 +594,7 @@ ggplot(datos_interes, aes(x = q, fill = factor(quintil_weighted_isei))) +
 
 # Filtrar los datos para incluir solo los años y quintiles de interés
 datos_interes <- g1 %>%
-  filter(ano %in% 1960:2017,
+  filter(ano %in% 1955:2022,
          quintil_weighted_isei %in% c(1, 2, 3, 4, 5))
 
 # Calcular la popularidad promedio de los nombres en cada quintil para cada año
@@ -535,11 +606,12 @@ tendencias_temporales <- datos_interes %>%
 ggplot(tendencias_temporales, aes(x = ano, y = promedio_popularidad, color = factor(quintil_weighted_isei))) +
   geom_line(aes(group = factor(quintil_weighted_isei))) +
   geom_point() +
-  labs(title = "Tendencias de popularidad promedio de nombres por quintil a lo largo del tiempo",
-       x = "Año",
-       y = "Popularidad promedio",
-       color = "Quintil\nSocioeconomico") +
-  theme_minimal()
+  labs(title = "Trends of Average Popularity of Names by Socioeconomic Quintile Over Time",
+       x = "Year",
+       y = "Average Popularity",
+       color = "Socioeconomic\nQuintile") +
+  scale_colour_manual(values = mypal_disc)
+
 
 
 # Entropía--------------------------------------------
@@ -633,13 +705,61 @@ crear_dataframes_por_quintil <- function(datos) {
 
 crear_dataframes_por_quintil(top_nombres)
 
+
+# agrupando por década --------------------------------------------------------
+# Convertir el año a una variable de década
+g1$decada <- as.integer(g1$ano %/% 10) * 10
+
+# Agrupar los datos por década, nombre y quintil, luego sumar las cantidades
+datos_agrupados <- g1 %>%
+  group_by(decada, nombre, quintil_weighted_isei) %>%
+  summarise(cantidad_total = sum(cantidad))
+
+# Ordenar los datos agrupados por década, quintil y cantidad total en orden descendente
+datos_ordenados <- datos_agrupados %>%
+  arrange(decada, quintil_weighted_isei, desc(cantidad_total))
+
+# Capturar los 10 nombres más comunes en cantidad para cada quintil en cada década
+top_nombres <- datos_ordenados %>%
+  group_by(decada, quintil_weighted_isei) %>%
+  top_n(10, wt = cantidad_total)
+
+# Ver los resultados
+print(top_nombres)
+glimpse(top_nombres)
+
+## top por quintil
+crear_dataframes_por_quintil <- function(datos) {
+  lista_dataframes <- lapply(1:5, function(quintil) {
+    nombre_data_frame <- paste0("top_nombre_q", quintil)
+    df <- datos %>%
+      filter(quintil_weighted_isei == quintil) %>%
+      select(-cantidad_total)
+    assign(nombre_data_frame, df, envir = .GlobalEnv)
+  })
+  
+  invisible(lista_dataframes)
+}
+
+crear_dataframes_por_quintil(top_nombres)
+
+
 # affiliation matrices. 
-mq1 <- netmem::edgelist_to_matrix(cbind(top_nombre_q1$nombre,top_nombre_q1$ano), bipartite = T)
-mq2 <- netmem::edgelist_to_matrix(cbind(top_nombre_q2$nombre,top_nombre_q2$ano), bipartite = T)
-mq3 <- netmem::edgelist_to_matrix(cbind(top_nombre_q3$nombre,top_nombre_q3$ano), bipartite = T)
-mq4 <- netmem::edgelist_to_matrix(cbind(top_nombre_q4$nombre,top_nombre_q4$ano), bipartite = T)
-mq5 <- netmem::edgelist_to_matrix(cbind(top_nombre_q5$nombre,top_nombre_q5$ano), bipartite = T)
-#glimpse(mq1)
+top_nombre_q1 <- top_nombre_q1 %>% filter(decada %in% c(1960, 1970, 1980, 1990, 2000, 2010, 2020))
+mq1 <- netmem::edgelist_to_matrix(cbind(top_nombre_q1$nombre,top_nombre_q1$decada), bipartite = T)
+
+top_nombre_q2 <- top_nombre_q2 %>% filter(decada %in% c(1960, 1970, 1980, 1990, 2000, 2010, 2020))
+mq2 <- netmem::edgelist_to_matrix(cbind(top_nombre_q2$nombre,top_nombre_q2$decada), bipartite = T)
+
+top_nombre_q3 <- top_nombre_q3 %>% filter(decada %in% c(1960, 1970, 1980, 1990, 2000, 2010, 2020))
+mq3 <- netmem::edgelist_to_matrix(cbind(top_nombre_q3$nombre,top_nombre_q3$decada), bipartite = T)
+
+top_nombre_q4 <- top_nombre_q4 %>% filter(decada %in% c(1960, 1970, 1980, 1990, 2000, 2010, 2020))
+mq4 <- netmem::edgelist_to_matrix(cbind(top_nombre_q4$nombre,top_nombre_q4$decada), bipartite = T)
+
+top_nombre_q5 <- top_nombre_q5 %>% filter(decada %in% c(1960, 1970, 1980, 1990, 2000, 2010, 2020))
+mq5 <- netmem::edgelist_to_matrix(cbind(top_nombre_q5$nombre,top_nombre_q5$decada), bipartite = T)
+#glimpse(mq5)
 
 # Dataframe de la matriz
 df_seq_1 <- as.data.frame(mq5) %>% rownames_to_column("name")
@@ -655,11 +775,10 @@ seqs_2 <- seqdef(df_seq_2[-1], var = names(df_seq_2[-1]), states = c("0","1"), i
 seqs_3 <- seqdef(df_seq_3[-1], var = names(df_seq_3[-1]), states = c("0","1"), id = df_seq_3$name)
 seqs_4 <- seqdef(df_seq_4[-1], var = names(df_seq_4[-1]), states = c("0","1"), id = df_seq_4$name)
 seqs_5 <- seqdef(df_seq_5[-1], var = names(df_seq_5[-1]), states = c("0","1"), id = df_seq_5$name)
-
-
+glimpse(seqs_5)
 
 # Dataframe de la matriz
-df_seq <- as.data.frame(mq5) %>%
+df_seq <- as.data.frame(mq3) %>%
   rownames_to_column("name")
 
 # Secuencias con name como id
@@ -669,19 +788,46 @@ seqs <- seqdef(df_seq[-1],
                id = df_seq$name)
 
 # Datos a formato tidy
-df_seqs <- as.data.frame(seqs) %>%
+df_seqs_q1 <- as.data.frame(seqs) %>%
   rownames_to_column("name") %>%
   pivot_longer(cols = -name, names_to = "time", values_to = "state")
 
+df_seqs_q2 <- as.data.frame(seqs) %>%
+  rownames_to_column("name") %>%
+  pivot_longer(cols = -name, names_to = "time", values_to = "state")
+
+df_seqs_q3 <- as.data.frame(seqs) %>%
+  rownames_to_column("name") %>%
+  pivot_longer(cols = -name, names_to = "time", values_to = "state")
+
+df_seqs_q4 <- as.data.frame(seqs) %>%
+  rownames_to_column("name") %>%
+  pivot_longer(cols = -name, names_to = "time", values_to = "state")
+
+df_seqs_q5 <- as.data.frame(seqs) %>%
+  rownames_to_column("name") %>%
+  pivot_longer(cols = -name, names_to = "time", values_to = "state")
+
+
 # Ordenar el dataframe según el estado y el tiempo
-df_seqs <- df_seqs %>%
-  arrange(desc(state), time)
+df_seqs_q1 <- df_seqs_q1 %>% arrange(desc(state), time)
+df_seqs_q2 <- df_seqs_q2 %>% arrange(desc(state), time)
+df_seqs_q3 <- df_seqs_q3 %>% arrange(desc(state), time)
+df_seqs_q4 <- df_seqs_q4 %>% arrange(desc(state), time)
+df_seqs_q5 <- df_seqs_q5 %>% arrange(desc(state), time)
+
 
 # Crear un factor ordenado para la columna 'name' basado en el orden de 'state' y 'time'
-df_seqs$name <- factor(df_seqs$name, levels = unique(df_seqs$name))
+df_seqs_q1$name <- factor(df_seqs_q1$name, levels = unique(df_seqs_q1$name))
+df_seqs_q2$name <- factor(df_seqs_q2$name, levels = unique(df_seqs_q2$name))
+df_seqs_q3$name <- factor(df_seqs_q3$name, levels = unique(df_seqs_q3$name))
+df_seqs_q4$name <- factor(df_seqs_q4$name, levels = unique(df_seqs_q4$name))
+df_seqs_q5$name <- factor(df_seqs_q5$name, levels = unique(df_seqs_q5$name))
 
+#glimpse(df_seqs_q5)
 # Trazar el gráfico
-p5 <- ggplot(df_seqs) +
+
+p5 <- ggplot(df_seqs_q4) +
   geom_tile(aes(x = time, y = name, fill = state), alpha = 0.5) +
   scale_fill_manual(values = c("0" = "white", "1" = "red")) +
   ylab("") + xlab("") +
@@ -695,17 +841,144 @@ print(p5)
 
 
 
+# plot 2 (comparar nombres comparando con el quintil 5)
+# Renombrar columnas para evitar conflicto
+df_seqs_q5 <- df_seqs_q5 %>%
+  rename(name = name, 
+         time = time,
+         state_q5 = state)
+
+df_seqs_q4 <- df_seqs_q4 %>%  
+  rename(name = name, 
+         time = time,
+         state_q4 = state)
+
+df_seqs_q3 <- df_seqs_q3 %>%  
+  rename(name = name, 
+         time = time,
+         state_q3 = state)
+
+df_seqs_q2 <- df_seqs_q2 %>%  
+  rename(name = name, 
+         time = time,
+         state_q2 = state)
+
+df_seqs_q1 <- df_seqs_q1 %>%  
+  rename(name = name, 
+         time = time,
+         state_q1 = state)
+
+# Unir por name y time  
+df_tops_q5_q1 <- left_join(df_seqs_q5, df_seqs_q1, 
+                           by = c("name", "time"))
+
+df_tops_q5_q2 <- left_join(df_seqs_q5, df_seqs_q2, 
+                           by = c("name", "time"))
+
+df_tops_q5_q3 <- left_join(df_seqs_q5, df_seqs_q3, 
+                           by = c("name", "time"))
+
+df_tops_q5_q4 <- left_join(df_seqs_q5, df_seqs_q4, 
+                     by = c("name", "time"))
 
 
 
+#glimpse(df_tops)
 
-glimpse(g1)
+ggplot(df_tops) +
+  geom_tile(aes(x = time, y = name, fill = state_q5), alpha = 0.5) +
+  scale_fill_manual(values = c("0" = "white", "1" = "red")) +
+  geom_point(data = subset(df_tops, state_q4 == 1),  
+             aes(x = time, y = name, color = state_q4),
+             size = 4, shape = 1, stroke = 0.3) +
+  scale_color_manual(values=c("1"="blue")) +
+  labs(title = "Q5 / Q4 comparison") +
+  theme(axis.text.y = element_text(size = 7))
 
 
+ggplot(df_tops) +
+  geom_tile(aes(x = time, y = name, fill = state_q5), alpha = 0.5) +
+  scale_fill_manual(values = c("0" = "white", "1" = "red")) +
+  geom_point(data = subset(df_tops, state_q4 == 1),  
+             aes(x = time, y = name, fill = factor(state_q5)),
+             size = 3, shape = 21, color = "blue") +
+  scale_fill_manual(values = c("0" = "white", "1" = "blue")) +
+  labs(title = "Q5 / Q4 comparison", y="") +
+  theme(axis.text.y = element_text(size = 8)) +
+  guides(fill = FALSE) +
+  scale_color_manual(values = c("1" = "red")) +
+  scale_fill_manual(name = "State Q4", values = c("0" = "white", "1" = "blue"))
+
+# plot comparativos -----------------------------------------------------------
+
+# plot Q5-Q4 
+ggplot(df_tops_q5_q4) +
+  geom_tile(aes(x = time, y = name, fill = state_q5), alpha = 0.5) +
+  scale_fill_manual(values = c("0" = "white", "1" = "red")) +
+  geom_point(data = subset(df_tops_q5_q4, state_q4 == 1),  
+             aes(x = time, y = name),
+             alpha = 0.8,
+             fill = "blue",
+             size = 3, shape = 21, color = "blue") +
+  scale_fill_manual(values = c("0" = "white", "1" = "blue")) +
+  labs(title = "Q5 / Q4 comparison", y="", x="") +
+  theme(axis.text.y = element_text(size = 8)) +
+  guides(fill = FALSE) +
+  scale_color_manual(values = c("1" = "red")) +
+  scale_fill_manual(name = "State Q4", values = c("0" = "white", "1" = "blue")) +
+  scale_fill_manual(name = "State Q5", values = c("0" = "white", "1" = "red"))
 
 
+# plot Q5-Q3 
+ggplot(df_tops_q5_q3) +
+  geom_tile(aes(x = time, y = name, fill = state_q5), alpha = 0.5) +
+  scale_fill_manual(values = c("0" = "white", "1" = "red")) +
+  geom_point(data = subset(df_tops_q5_q3, state_q3 == 1),  
+             aes(x = time, y = name),
+             alpha = 0.8,
+             fill = "blue",
+             size = 3, shape = 21, color = "blue") +
+  scale_fill_manual(values = c("0" = "white", "1" = "blue")) +
+  labs(title = "Q5 / Q3 comparison", y="", x="") +
+  theme(axis.text.y = element_text(size = 8)) +
+  guides(fill = FALSE) +
+  scale_color_manual(values = c("1" = "red")) +
+  scale_fill_manual(name = "State Q4", values = c("0" = "white", "1" = "blue")) +
+  scale_fill_manual(name = "State Q5", values = c("0" = "white", "1" = "red"))
 
+# plot Q5-Q2 
+ggplot(df_tops_q5_q2) +
+  geom_tile(aes(x = time, y = name, fill = state_q5), alpha = 0.5) +
+  scale_fill_manual(values = c("0" = "white", "1" = "red")) +
+  geom_point(data = subset(df_tops_q5_q2, state_q2 == 1),  
+             aes(x = time, y = name),
+             alpha = 0.8,
+             fill = "blue",
+             size = 3, shape = 21, color = "blue") +
+  scale_fill_manual(values = c("0" = "white", "1" = "blue")) +
+  labs(title = "Q5 / Q2 comparison", y="", x="") +
+  theme(axis.text.y = element_text(size = 8)) +
+  guides(fill = FALSE) +
+  scale_color_manual(values = c("1" = "red")) +
+  scale_fill_manual(name = "State Q4", values = c("0" = "white", "1" = "blue")) +
+  scale_fill_manual(name = "State Q5", values = c("0" = "white", "1" = "red"))
 
+# plot Q5-Q1 
+ggplot(df_tops_q5_q1) +
+  geom_tile(aes(x = time, y = name, fill = state_q5), alpha = 0.5) +
+  scale_fill_manual(values = c("0" = "white", "1" = "red")) +
+  geom_point(data = subset(df_tops_q5_q1, state_q1 == 1),  
+             aes(x = time, y = name),
+             alpha = 0.8,
+             fill = "blue",
+             size = 3, shape = 21, color = "blue") +
+  scale_fill_manual(values = c("0" = "white", "1" = "blue")) +
+  labs(title = "Q5 / Q1 comparison", y="", x="") +
+  theme(axis.text.y = element_text(size = 8)) +
+  guides(fill = FALSE) +
+  scale_color_manual(values = c("1" = "red")) +
+  scale_fill_manual(name = "State Q4", values = c("0" = "white", "1" = "blue")) +
+  scale_fill_manual(name = "State Q5", values = c("0" = "white", "1" = "red"))
 
 
 
@@ -736,12 +1009,13 @@ promedio_por_cuartil <- datos_interes %>%
 # Visualizar el promedio de popularidad de los nombres seleccionados para cada quintil a lo largo del tiempo
 ggplot(promedio_por_cuartil, aes(x = ano, y = promedio_popularidad, color = factor(quintil_weighted_isei))) +
   geom_line(aes(group = factor(quintil_weighted_isei))) +  
-  geom_point(size=2) +
-  labs(title = "Nombres mas populares en el quintil 5 en el ano 1960",
-       x = "Ano",
-       y = "Promedio de popularidad",
-       color = "Quintil\nSocioeconomico") +
-   scale_colour_manual(values = mypal_disc)
+  geom_point(size = 2) +
+  labs(title = "Most Popular Names in Quintile 5 in 1960",
+       x = "Year",
+       y = "Average Popularity",
+       color = "Socioeconomic\nQuintile") +
+  scale_colour_manual(values = mypal_disc)
+
   
 
 
@@ -790,8 +1064,8 @@ nombres_populares_1982 <- datos_1982 %>%
 
 # Filtrar los datos originales para incluir los nombres seleccionados y los años posteriores
 datos_interes_1982 <- g1 %>%
-  filter(ano %in% c("1982", "1992", "2002", "2017"),
-         quintil_weighted_isei %in% c(1, 2, 3, 4, 5),
+  filter(ano %in% 1982:2017,
+         quintil_weighted_isei %in% 1:5,
          nombre %in% nombres_populares_1982$nombre)
 
 # Calcular el promedio de popularidad de los nombres seleccionados para cada quintil en cada año
@@ -824,8 +1098,8 @@ nombres_populares_1992 <- datos_1992 %>%
 
 # Filtrar los datos originales para incluir los nombres seleccionados y los años posteriores
 datos_interes_1992 <- g1 %>%
-  filter(ano %in% c("1992", "2002", "2017"),
-         quintil_weighted_isei %in% c(1, 2, 3, 4, 5),
+  filter(ano %in% 1992:2017,
+         quintil_weighted_isei %in% 1:5,
          nombre %in% nombres_populares_1992$nombre)
 
 # Calcular el promedio de popularidad de los nombres seleccionados para cada quintil en cada año
@@ -857,8 +1131,8 @@ nombres_populares_2002 <- datos_2002 %>%
 
 # Filtrar los datos originales para incluir los nombres seleccionados y los años posteriores
 datos_interes_2002 <- g1 %>%
-  filter(ano %in% c("2002", "2017"),
-         quintil_weighted_isei %in% c(1, 2, 3, 4, 5),
+  filter(ano %in% 2002:2022,
+         quintil_weighted_isei %in% 1:5,
          nombre %in% nombres_populares_2002$nombre)
 
 # Calcular el promedio de popularidad de los nombres seleccionados para cada quintil en cada año
