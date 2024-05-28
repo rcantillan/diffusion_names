@@ -1,14 +1,14 @@
 
 # URL de la página web
 
-url <- paste0("http://www.genealogiachilenaenred.cl/gcr/IndividualPage.aspx?Id=I",i)
+url <- paste0("http://www.genealogiachilenaenred.cl/gcr/IndividualPage.aspx?ID=I",i)
 
 # Leer el contenido HTML de la página web
 page <- read_html(url)
 
 # Extraer la información del individuo principal (EGO)
 individual_id <- url %>%
-  str_extract("(?<=Id=).*") %>%
+  str_extract("(?<=ID=).*") %>%
   str_trim()
 
 individual_name <- page %>%

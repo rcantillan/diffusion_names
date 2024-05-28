@@ -881,9 +881,68 @@ df_tops_q5_q3 <- left_join(df_seqs_q5, df_seqs_q3,
 df_tops_q5_q4 <- left_join(df_seqs_q5, df_seqs_q4, 
                      by = c("name", "time"))
 
+## todos los data frames. 
+df_tops_q5_all <- left_join(df_seqs_q5, df_seqs_q1, 
+                            by = c("name", "time"))
+
+df_tops_q5_all <-  left_join(df_tops_q5_all, df_seqs_q2, 
+                             by = c("name", "time"))
+
+df_tops_q5_all <- left_join(df_tops_q5_all, df_seqs_q3, 
+                            by = c("name", "time"))
+
+df_tops_q5_all <- left_join(df_tops_q5_all, df_seqs_q4, 
+                            by = c("name", "time"))
+
+glimpse(df_tops_q5_all)
+
+# Crear el gráfico combinado
+library(ggplot2)
 
 
-#glimpse(df_tops)
+
+# Crear un nuevo dataframe para los puntos de cada quintil
+df_points <- rbind(
+  transform(df_tops_q5_all, quintil = "state_q1"),
+  transform(df_tops_q5_all, quintil = "state_q2"),
+  transform(df_tops_q5_all, quintil = "state_q3"),
+  transform(df_tops_q5_all, quintil = "state_q4"),
+  transform(df_tops_q5_all, quintil = "state_q5")
+)
+
+# Convertir las variables de estado a numéricas y reemplazar NA con 0
+df_points[, 3:7] <- lapply(df_points[, 3:7], function(x) {x[is.na(x)] <- 0; as.numeric(as.character(x))})
+
+# Definir colores para cada quintil
+colors <- c("state_q1" = "#007BFF", "state_q2" = "#FFA24A", "state_q3" = "#E60000", "state_q4" = "#41D941", "state_q5" = "#003366")
+
+# Crear el gráfico combinado
+ggplot() +
+  geom_tile(data = df_tops_q5_all, aes(x = time, y = name, fill = factor(state_q5)), alpha = 0.8) +
+  geom_point(data = subset(df_points, state_q2 == 1), 
+             aes(x = time, y = name, color = "state_q2"), size = 3) +
+  geom_point(data = subset(df_points, state_q3 == 1), 
+             aes(x = time, y = name, color = "state_q3"), size = 3) +
+  geom_point(data = subset(df_points, state_q4 == 1), 
+             aes(x = time, y = name, color = "state_q4"), size = 3) +
+  geom_point(data = subset(df_points, state_q1 == 1), 
+             aes(x = time, y = name, color = "state_q1"), size = 3) +
+  #geom_point(data = subset(df_points, state_q5 == 1), 
+  #           aes(x = time, y = name, color = "state_q5"), size = 3) +
+  scale_fill_manual(values = c("0" = "white", "1" = "#003366"), name = "State Q5") +
+  scale_color_manual(values = colors, name = "Quintil") +
+  labs(title = "Q5 / Quintil comparison", y = "", x = "") +
+  theme(legend.position = "right",
+        axis.text.y = element_text(size = 8)) +
+  guides(fill = guide_legend(title = "State Q5"))
+
+
+
+
+
+
+
+
 
 ggplot(df_tops) +
   geom_tile(aes(x = time, y = name, fill = state_q5), alpha = 0.5) +
@@ -911,74 +970,76 @@ ggplot(df_tops) +
 
 # plot comparativos -----------------------------------------------------------
 
+colors <- c("state_q1" = "#007BFF", "state_q2" = "#FFA24A", "state_q3" = "#E60000", "state_q4" = "#41D941", "state_q5" = "#003366")
+
 # plot Q5-Q4 
 ggplot(df_tops_q5_q4) +
-  geom_tile(aes(x = time, y = name, fill = state_q5), alpha = 0.5) +
-  scale_fill_manual(values = c("0" = "white", "1" = "red")) +
+  geom_tile(aes(x = time, y = name, fill = state_q5), alpha = 0.8) +
+  scale_fill_manual(values = c("0" = "white", "1" = "#003366")) +
   geom_point(data = subset(df_tops_q5_q4, state_q4 == 1),  
              aes(x = time, y = name),
              alpha = 0.8,
-             fill = "blue",
-             size = 3, shape = 21, color = "blue") +
-  scale_fill_manual(values = c("0" = "white", "1" = "blue")) +
+             fill = "#41D941",
+             size = 3, shape = 21, color = "#41D941") +
+  scale_fill_manual(values = c("0" = "white", "1" = "#41D941")) +
   labs(title = "Q5 / Q4 comparison", y="", x="") +
   theme(axis.text.y = element_text(size = 8)) +
   guides(fill = FALSE) +
-  scale_color_manual(values = c("1" = "red")) +
-  scale_fill_manual(name = "State Q4", values = c("0" = "white", "1" = "blue")) +
-  scale_fill_manual(name = "State Q5", values = c("0" = "white", "1" = "red"))
+  scale_color_manual(values = c("1" = "#003366")) +
+  scale_fill_manual(name = "State Q4", values = c("0" = "white", "1" = "#41D941")) +
+  scale_fill_manual(name = "State Q5", values = c("0" = "white", "1" = "#003366"))
 
 
 # plot Q5-Q3 
 ggplot(df_tops_q5_q3) +
-  geom_tile(aes(x = time, y = name, fill = state_q5), alpha = 0.5) +
-  scale_fill_manual(values = c("0" = "white", "1" = "red")) +
+  geom_tile(aes(x = time, y = name, fill = state_q5), alpha = 0.8) +
+  scale_fill_manual(values = c("0" = "white", "1" = "#003366")) +
   geom_point(data = subset(df_tops_q5_q3, state_q3 == 1),  
              aes(x = time, y = name),
              alpha = 0.8,
-             fill = "blue",
-             size = 3, shape = 21, color = "blue") +
-  scale_fill_manual(values = c("0" = "white", "1" = "blue")) +
+             fill = "#E60000",
+             size = 3, shape = 21, color ="#E60000") +
+  scale_fill_manual(values = c("0" = "white", "1" = "#E60000")) +
   labs(title = "Q5 / Q3 comparison", y="", x="") +
   theme(axis.text.y = element_text(size = 8)) +
   guides(fill = FALSE) +
-  scale_color_manual(values = c("1" = "red")) +
-  scale_fill_manual(name = "State Q4", values = c("0" = "white", "1" = "blue")) +
-  scale_fill_manual(name = "State Q5", values = c("0" = "white", "1" = "red"))
+  scale_color_manual(values = c("1" = "#003366")) +
+  scale_fill_manual(name = "State Q4", values = c("0" = "white", "1" = "#E60000")) +
+  scale_fill_manual(name = "State Q5", values = c("0" = "white", "1" = "#003366"))
 
 # plot Q5-Q2 
 ggplot(df_tops_q5_q2) +
-  geom_tile(aes(x = time, y = name, fill = state_q5), alpha = 0.5) +
-  scale_fill_manual(values = c("0" = "white", "1" = "red")) +
+  geom_tile(aes(x = time, y = name, fill = state_q5), alpha = 0.8) +
+  scale_fill_manual(values = c("0" = "white", "1" = "#003366")) +
   geom_point(data = subset(df_tops_q5_q2, state_q2 == 1),  
              aes(x = time, y = name),
              alpha = 0.8,
-             fill = "blue",
-             size = 3, shape = 21, color = "blue") +
-  scale_fill_manual(values = c("0" = "white", "1" = "blue")) +
+             fill = "#FFA24A",
+             size = 3, shape = 21, color = "#FFA24A") +
+  scale_fill_manual(values = c("0" = "white", "1" = "#FFA24A")) +
   labs(title = "Q5 / Q2 comparison", y="", x="") +
   theme(axis.text.y = element_text(size = 8)) +
   guides(fill = FALSE) +
-  scale_color_manual(values = c("1" = "red")) +
-  scale_fill_manual(name = "State Q4", values = c("0" = "white", "1" = "blue")) +
-  scale_fill_manual(name = "State Q5", values = c("0" = "white", "1" = "red"))
+  scale_color_manual(values = c("1" = "#003366")) +
+  scale_fill_manual(name = "State Q4", values = c("0" = "white", "1" = "#FFA24A")) +
+  scale_fill_manual(name = "State Q5", values = c("0" = "white", "1" = "#003366"))
 
 # plot Q5-Q1 
 ggplot(df_tops_q5_q1) +
-  geom_tile(aes(x = time, y = name, fill = state_q5), alpha = 0.5) +
-  scale_fill_manual(values = c("0" = "white", "1" = "red")) +
+  geom_tile(aes(x = time, y = name, fill = state_q5), alpha = 0.8) +
+  scale_fill_manual(values = c("0" = "white", "1" = "#003366")) +
   geom_point(data = subset(df_tops_q5_q1, state_q1 == 1),  
              aes(x = time, y = name),
              alpha = 0.8,
-             fill = "blue",
-             size = 3, shape = 21, color = "blue") +
-  scale_fill_manual(values = c("0" = "white", "1" = "blue")) +
+             fill = "#007BFF",
+             size = 3, shape = 21, color = "#007BFF") +
+  scale_fill_manual(values = c("0" = "white", "1" = "#007BFF")) +
   labs(title = "Q5 / Q1 comparison", y="", x="") +
   theme(axis.text.y = element_text(size = 8)) +
   guides(fill = FALSE) +
-  scale_color_manual(values = c("1" = "red")) +
+  scale_color_manual(values = c("1" = "#003366")) +
   scale_fill_manual(name = "State Q4", values = c("0" = "white", "1" = "blue")) +
-  scale_fill_manual(name = "State Q5", values = c("0" = "white", "1" = "red"))
+  scale_fill_manual(name = "State Q5", values = c("0" = "white", "1" = "#003366"))
 
 
 
