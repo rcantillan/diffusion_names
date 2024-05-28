@@ -1,7 +1,5 @@
-
 # URL de la página web
-
-url <- paste0("http://www.genealogiachilenaenred.cl/gcr/IndividualPage.aspx?ID=I",i)
+url <- paste0("http://www.genealogiachilenaenred.cl/gcr/IndividualPage.aspx?ID=I", i)
 
 # Leer el contenido HTML de la página web
 page <- read_html(url)
@@ -13,7 +11,7 @@ individual_id <- url %>%
 
 individual_name <- page %>%
   html_node("h7") %>%
-  html_text() %>% 
+  html_text() %>%
   str_trim()
 
 individual_birth <- page %>%
@@ -89,15 +87,11 @@ spouse_death <- page %>%
   html_text() %>%
   str_trim()
 
-
-
 # Extract the children node
-# 
 children_node <- page %>% html_node("#MainContent_pnlChildrens")
 
 # Check if the node exists and is not NA
 if (!is.na(children_node)) {
-  
   # Extract table data if the node exists
   children_table <- children_node %>% html_table(fill = TRUE)
   
@@ -106,27 +100,45 @@ if (!is.na(children_node)) {
     html_attr("href") %>%
     str_extract("(?<=ID=).*")
   
-  # Obtener los nombres, fechas de nacimiento y defunción de los hijos
   children_names <- as.character(children_table$Nombre)
   children_births <- as.character(children_table$`Fecha de Nacimiento`)
   children_deaths <- as.character(children_table$`Lugar de Nacimiento`)
-  
 } else {
-  # Assign NA if the node doesn't exist
   children_table <- NA
+  children_ids <- character(0)
+  children_names <- character(0)
+  children_births <- character(0)
+  children_deaths <- character(0)
 }
 
-children_data <- cbind(id = children_ids, children_table)
+# Crear un vector para la columna 'relationship'
+relationship_vector <- c("ego")
 
-data_families <- tibble(
-  from = individual_id,
-  from_name = individual_name,
-  from_birth = individual_birth,
-  from_death = individual_death,
-  to = list(c(father_id, mother_id, spouse_id, children_ids)),
-  to_name = list(c(father_name, mother_name, spouse_name, children_names)),
-  to_birth = list(c(father_birth, mother_birth, spouse_birth, children_births)),
-  to_death = list(c(father_death, mother_death, spouse_death, children_deaths)),
-  relationship = list(c("father", "mother", "spouse", rep("child", length(children_ids))))
-) %>%
-  unnest(cols = c(to, to_name, to_birth, to_death, relationship))
+if (length(father_id) > 0) {
+  relationship_vector <- c(relationship_vector, rep("father", length(father_id)))
+}
+
+if (length(mother_id) > 0) {
+  relationship_vector <- c(relationship_vector, rep("mother", length(mother_id)))
+}
+
+if (length(spouse_id) > 0) {
+  relationship_vector <- c(relationship_vector, rep("spouse", length(spouse_id)))
+}
+
+if (length(children_ids) > 0) {
+  relationship_vector <- c(relationship_vector, rep("child", length(children_ids)))
+}
+
+# Crear un data frame largo con todas las relaciones
+data_families <- data.frame(
+  from = c(individual_id, rep(NA, length(relationship_vector) - 1)),
+  from_name = c(individual_name, rep(NA, length(relationship_vector) - 1)),
+  from_birth = c(individual_birth, rep(NA, length(relationship_vector) - 1)),
+  from_death = c(individual_death, rep(NA, length(relationship_vector) - 1)),
+  to = c(NA, if (length(father_id) > 0) father_id, if (length(mother_id) > 0) mother_id, if (length(spouse_id) > 0) spouse_id, if (length(children_ids) > 0) children_ids),
+  to_name = c(NA, if (length(father_name) > 0) father_name, if (length(mother_name) > 0) mother_name, if (length(spouse_name) > 0) spouse_name, if (length(children_names) > 0) children_names),
+  to_birth = c(NA, if (length(father_birth) > 0) father_birth, if (length(mother_birth) > 0) mother_birth, if (length(spouse_birth) > 0) spouse_birth, if (length(children_births) > 0) children_births),
+  to_death = c(NA, if (length(father_death) > 0) father_death, if (length(mother_death) > 0) mother_death, if (length(spouse_death) > 0) spouse_death, if (length(children_deaths) > 0) children_deaths),
+  relationship = relationship_vector
+)

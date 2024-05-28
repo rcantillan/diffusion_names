@@ -4,7 +4,8 @@ rm(list = ls())
 library(pacman)
 p_load(rvest, dplyr, tidyr, stringr, here)
 
-folder <- getwd()
+#folder <- getwd()
+folder <- "/media/rober/4612-9FBE/names"
 
 # =======================================================================
 
@@ -31,8 +32,8 @@ positive_sleep <- function(duration) {
 }
 
 # Resume from the last iteration
-for (i in (last_iteration + 1):50) {
-  #for (i in (last_iteration + 1):146431) {
+#for (i in (last_iteration + 1):50) {
+for (i in (last_iteration + 1):146431) {
   cat(":::::::::::::::::::::::::::", i, "::::::::::::::::::::::\n")
   source(here("genealogy.R"))
   data_families$from <- paste0("I", i)  # Ensure each iteration number is saved in the desired format
