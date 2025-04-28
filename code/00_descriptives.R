@@ -12,41 +12,41 @@
 # =============================================================================
 
 # Librerías para manipulación de datos
-library(tidyverse)      # Conjunto de paquetes para análisis de datos
-library(ipumsr)         # Manejo de datos de IPUMS
-library(readr)          # Lectura de archivos
-library(dplyr)          # Manipulación de dataframes
-library(purrr)          # Programación funcional 
-library(tidyr)          # Manipulación de datos
-library(stringr)        # Manipulación de strings
-library(forcats)        # Manipulación de factores
+library(tidyverse)      
+library(ipumsr)         
+library(readr)          
+library(dplyr)          
+library(purrr)          
+library(tidyr)          
+library(stringr)        
+library(forcats)        
 
 # Librerías para análisis de redes y visualización
-library(igraph)         # Análisis de redes
-library(migraph)        # Extensión de igraph
-library(ggraph)         # Visualización de redes
-library(graphlayouts)   # Layouts para redes
-library(bipartite)      # Análisis de redes bipartitas
+library(igraph)         
+library(migraph)        
+library(ggraph)         
+library(graphlayouts)   
+library(bipartite)      
 
 # Librerías para análisis de texto
-library(stringi)        # Manipulación avanzada de strings
-library(tidytext)       # Análisis de texto
-library(stringdist)     # Distancias entre strings
+library(stringi)        
+library(tidytext)       
+library(stringdist)     
 
 # Librerías para visualización
-library(ggplot2)        # Visualizaciones
-library(ggforce)        # Extensiones para ggplot2
-library(ggpubr)         # Publicación de gráficos
-library(ggalluvial)     # Gráficos aluviales
-library(patchwork)      # Combinar gráficos
-library(scales)         # Escalas para gráficos
+library(ggplot2)        
+library(ggforce)        
+library(ggpubr)         
+library(ggalluvial)     
+library(patchwork)      
+library(scales)         
 
 # Librerías para análisis especializados
-library(RPostgres)      # Conexión con PostgreSQL
-library(TraMineR)       # Análisis de secuencias
-library(tidylog)        # Logging para operaciones tidyverse
-library(entropy)        # Cálculo de entropía
-library(netmem)         # Análisis de redes
+library(RPostgres)      
+library(TraMineR)       
+library(tidylog)        
+library(entropy)        
+library(netmem)         
 
 # =============================================================================
 # 2. CONFIGURACIÓN DEL TEMA VISUAL PARA GRÁFICOS
