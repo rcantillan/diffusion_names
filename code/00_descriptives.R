@@ -288,7 +288,7 @@ save(nombres_procesados, file = "nombres_procesados.RData")
 # =============================================================================
 
 # Cargar datos socioeconómicos por comuna
-load("C:/Users/qramo/Desktop/names_data/names_gse.RData")
+load("C:/Users/qramo/Desktop/names_data/gse_comunas.RData")
 
 # CORRECCIÓN: Crear un subset limpio para evitar problemas de columnas
 nombres_procesados_subset <- nombres_procesados %>%
