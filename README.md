@@ -14,4 +14,11 @@ Random thought:
 - We could analyse the transitivity of name difussion across social clases.
 - A los Juanes, los oseses y las Marías les agregaría el segundo nombre y los trataría como nombre unitario. E.j., "Juan Pablo", "María Margarita".
 - Los graficos con top names podrian ser reemplazados con top names cada década y flujos entre ellas, para comunas selectas
-  
+
+
+Papers:
+
+https://www.pnas.org/doi/10.1073/pnas.1504811112
+
+
+
