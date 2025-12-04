@@ -9,6 +9,8 @@
 
 # Cargar librerías necesarias
 library(tidyverse)
+library(data.table)
+library(scales)
 
 # Cargar el modelo ABM
 source("code/05_abm_name_diffusion.R")

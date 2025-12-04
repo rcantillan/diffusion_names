@@ -23,6 +23,7 @@
 # Cargar librerías necesarias
 library(tidyverse)
 library(data.table)
+library(scales)  # For percent_format() in visualizations
 
 ################################################################################
 # 1. ESTRUCTURA DE DATOS Y PARÁMETROS DEL MODELO
@@ -296,7 +297,8 @@ calculate_downward_exposure <- function(state, params, t) {
 #' basándose en las exposiciones ascendente y descendente.
 #' 
 #' Formula general:
-#' P_{k,n}(t+1) ∝ exp(β * [α_up * E^↑_{k,n}(t) - α_down * E^↓_{k,n}(t)]) + γ * p_{k,n}(t)
+#' U_{k,n}(t) = β * [α_up * E^↑_{k,n}(t) - α_down * E^↓_{k,n}(t)] + γ * p_{k,n}(t)
+#' P_{k,n}(t+1) = exp(U_{k,n}(t)) / Σ_{n'} exp(U_{k,n'}(t))  [Softmax]
 #' 
 #' @param state Array 3D del estado actual
 #' @param params Lista de parámetros del modelo
