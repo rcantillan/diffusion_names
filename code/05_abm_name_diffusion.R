@@ -21,9 +21,12 @@
 ################################################################################
 
 # Cargar librerías necesarias
+# tidyverse: Para manipulación de datos (dplyr, tidyr) y visualización (ggplot2)
+# data.table: Para operaciones eficientes con arrays y matrices
+# scales: Para formateo de etiquetas en gráficos (percent_format)
 library(tidyverse)
 library(data.table)
-library(scales)  # For percent_format() in visualizations
+library(scales)
 
 ################################################################################
 # 1. ESTRUCTURA DE DATOS Y PARÁMETROS DEL MODELO
@@ -636,7 +639,7 @@ plot_name_evolution <- function(abm_results, class_index = 5, top_n = 10) {
       plot.subtitle = element_text(size = 11),
       legend.position = "right"
     ) +
-    scale_y_continuous(labels = scales::percent_format())
+    scale_y_continuous(labels = percent_format())
   
   return(p)
 }

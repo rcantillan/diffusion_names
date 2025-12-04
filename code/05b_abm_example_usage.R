@@ -8,12 +8,25 @@
 ################################################################################
 
 # Cargar librerías necesarias
-library(tidyverse)
-library(data.table)
-library(scales)
+# tidyverse: Para manipulación de datos y visualización
+# data.table: Para operaciones eficientes con datos
+# scales: Para formateo de etiquetas en gráficos
+tryCatch({
+  library(tidyverse)
+  library(data.table)
+  library(scales)
+}, error = function(e) {
+  message("Error cargando librerías. Por favor instale las dependencias:")
+  message("  install.packages(c('tidyverse', 'data.table', 'scales'))")
+  stop("Librerías requeridas no disponibles")
+})
 
 # Cargar el modelo ABM
-source("code/05_abm_name_diffusion.R")
+tryCatch({
+  source("code/05_abm_name_diffusion.R")
+}, error = function(e) {
+  stop("No se pudo cargar el modelo ABM. Asegúrese de que el archivo existe: code/05_abm_name_diffusion.R")
+})
 
 ################################################################################
 # EJEMPLO 1: Simulación Básica con Parámetros por Defecto

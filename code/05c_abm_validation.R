@@ -22,11 +22,12 @@ cat(rep("=", 80), "\n\n", sep = "")
 tryCatch({
   library(tidyverse)
   library(data.table)
+  library(scales)
   cat("✓ Librerías cargadas exitosamente\n\n")
 }, error = function(e) {
   cat("✗ Error cargando librerías:", conditionMessage(e), "\n")
-  cat("  Por favor instale: install.packages(c('tidyverse', 'data.table'))\n\n")
-  quit(save = "no", status = 1)
+  cat("  Por favor instale: install.packages(c('tidyverse', 'data.table', 'scales'))\n\n")
+  stop("No se pudieron cargar las librerías necesarias")
 })
 
 # Cargar el modelo
@@ -35,7 +36,7 @@ tryCatch({
   cat("✓ Modelo ABM cargado exitosamente\n\n")
 }, error = function(e) {
   cat("✗ Error cargando el modelo:", conditionMessage(e), "\n\n")
-  quit(save = "no", status = 1)
+  stop("No se pudo cargar el modelo ABM")
 })
 
 ################################################################################
